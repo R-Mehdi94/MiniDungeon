@@ -35,6 +35,10 @@ map_layout = [
 ]
 
 # --- Constantes ---
+REWARD_WALL = -10
+REWARD_DEFAULT = -1
+REWARD_GOAL = 1000
+REWARD_OUT = -10
 
 CHARACTER_SCALING = 0.6
 TILE_SCALING = 0.5
@@ -110,7 +114,7 @@ class MyGame(arcade.Window):
                     self.player_sprite.center_y = y
                     self.player_list.append(self.player_sprite)
                     player_found = True
-                    print(f"🎮 Joueur placé en ({x:.0f}, {y:.0f})")
+                    print(f" Joueur placé en ({x:.0f}, {y:.0f})")
 
                 elif char == "K":
                     key = arcade.Sprite(":resources:images/items/keyYellow.png", ITEM_SCALING)

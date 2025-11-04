@@ -1,7 +1,6 @@
 import arcade
 import random
-
-
+from random import choice
 map_layout = [
     "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWW",
     "W                            W",
@@ -42,6 +41,28 @@ TILE_SCALING = 0.5
 ITEM_SCALING = 0.5
 DOOR_SCALING = 0.4
 BASE_TILE_SIZE = 64
+
+MAP_WALL = "W"
+MAP_GOAL = "T"
+MAP_START = 'P'
+MAP_KEY = "K"
+
+REWARD_WALL = -10
+REWARD_DEFAULT = -1
+REWARD_KEY = 10
+REWARD_GOAL = 1000
+REWARD_OUT = -10
+
+ACTION_UP = 'UP'
+ACTION_DOWN = 'DOWN'
+ACTION_LEFT = 'LEFT'
+ACTION_RIGHT = 'RIGHT'
+
+ACTIONS = {ACTION_UP: (-1, 0),
+           ACTION_DOWN: (1, 0),
+           ACTION_LEFT: (0, -1),
+           ACTION_RIGHT: (0, 1)}
+
 TILE_PIXEL_SIZE = int(BASE_TILE_SIZE * TILE_SCALING)
 MAP_HEIGHT_TILES = len(map_layout)
 MAP_WIDTH_TILES = len(map_layout[0])
@@ -51,12 +72,100 @@ SCREEN_TITLE = "MINI DUNGEON"
 PLAYER_MOVEMENT_SPEED = 5
 
 print(f"=== Donjon {MAP_WIDTH_TILES}x{MAP_HEIGHT_TILES} ({SCREEN_WIDTH}x{SCREEN_HEIGHT}px) ===")
+def arg_max(table):
+    return max(table, key=table.get)
+
+class Agent:
+    def __init__(self, env):
+        self.env = env
+        self.qtable = {}
+        self.reset()
+
+    def reset(self):
+        self.pos = self.env.start
+        self.has_key = False
+        self.score = 0
+        self.done = False
+
+
+    def get_radar(self, pos):
+        radar = {}
+        for direction, (dr, dc) in ACTIONS.items():
+            check_pos = (pos[0] + dr, pos[1] + dc)
+            if check_pos in self.map:
+                radar[direction] = self.map[check_pos]
+            else:
+                radar[direction] = None  # en dehors de la map
+        return radar
+
+    def do(self, action, learning_rate=1, discount_factor=1):
+        pos, reward = self.env.do(self.pos, action)
+        if self.pos not in self.qtable:
+            self.qtable[self.pos] = {ACTION_UP: 0, ACTION_DOWN: 0, ACTION_LEFT: 0, ACTION_RIGHT: 0}
+        if pos not in self.qtable:
+            self.qtable[pos] = {ACTION_UP: 0, ACTION_DOWN: 0, ACTION_LEFT: 0, ACTION_RIGHT: 0}
+        # Q(s, a) += Q(s, a) + alpha * [r + gamma * max Q(s') - Q(s, a)]
+        delta = learning_rate * (
+                reward + discount_factor * max(self.qtable[pos].values()) - self.qtable[self.pos][action])
+        self.qtable[self.pos][action] += delta
+        self.pos = pos
+        self.reward = reward
+        self.score += reward
+        self.iterations += 1
+
+    def best_action(self):
+        if self.pos in self.qtable:
+            return arg_max(self.qtable[self.pos])
+        else:
+            return choice(list(ACTIONS.keys()))
+
+
+class Environment:
+    def __init__(self, map_layout):
+        self.map = {}
+        row, col = 0, 0
+        for line in map_layout:
+
+            for char in line:
+                self.map[row, col] = char
+                if char == MAP_START:
+                    self.start = (row, col)
+                elif char == MAP_KEY:
+                    self.key = (row, col)
+                elif char == MAP_GOAL:
+                    self.goal = (row, col)
+
+                col += 1
+            self.width = col
+            row += 1
+            col = 0
+        self.height = row
+
+    def do(self, pos, action):
+        move = ACTIONS[action]
+        new_pos = (pos[0] + move[0], pos[1] + move[1])
+        if new_pos in self.map:
+            if self.map[new_pos] == MAP_WALL:
+                reward = REWARD_WALL
+            else:
+                pos = new_pos
+                if self.map[new_pos] == MAP_KEY:
+                    reward = REWARD_KEY
+
+                elif self.map[new_pos] == MAP_GOAL:
+                    reward = REWARD_GOAL
+                else:
+                    reward = REWARD_DEFAULT
+        else:
+            reward = REWARD_OUT
+        return pos, reward
 
 
 class MyGame(arcade.Window):
 
-    def __init__(self):
+    def __init__(self, agent):
         super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
+        self.agent = agent
         self.wall_list = None
         self.player_list = None
         self.key_list = None
@@ -233,7 +342,10 @@ class MyGame(arcade.Window):
 
 
 def main():
-    window = MyGame()
+    env = Environment(map_layout)
+    agent = Agent(env)
+
+    window = MyGame(agent)
     window.setup()
     arcade.run()
 
