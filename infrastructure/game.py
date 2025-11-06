@@ -22,10 +22,10 @@ class Game(arcade.Window):
         arcade.set_background_color(arcade.color.DARK_BROWN)
 
     def setup(self):
-        print("\n=== Chargement du niveau ===")
+        print('\n=== Chargement du niveau ===')
         self.key_count = 0
         self.key_text = arcade.Text(
-            f"Clés : {self.key_count}",
+            f'Clés : {self.key_count}',
             10,
             10,
             arcade.color.WHITE, 18
@@ -49,56 +49,56 @@ class Game(arcade.Window):
                 y = (MAP_HEIGHT_TILES - 1 - row_index) * \
                     TILE_PIXEL_SIZE + TILE_PIXEL_SIZE / 2
 
-                if char == "W":
+                if char == 'W':
                     wall = arcade.Sprite(
-                        ":resources:images/tiles/grassCenter.png", TILE_SCALING)
+                        ':resources:images/tiles/grassCenter.png', TILE_SCALING)
                     wall.center_x = x
                     wall.center_y = y
                     self.wall_list.append(wall)
 
-                elif char == "P":
+                elif char == 'P':
                     self.player_sprite = arcade.Sprite(
-                        ":resources:images/animated_characters/female_person/femalePerson_idle.png",
+                        ':resources:images/animated_characters/female_person/femalePerson_idle.png',
                         CHARACTER_SCALING
                     )
                     self.player_sprite.center_x = x
                     self.player_sprite.center_y = y
                     self.player_list.append(self.player_sprite)
                     player_found = True
-                    print(f"🎮 Joueur placé en ({x:.0f}, {y:.0f})")
+                    print(f'🎮 Joueur placé en ({x:.0f}, {y:.0f})')
 
-                elif char == "K":
+                elif char == 'K':
                     key = arcade.Sprite(
-                        ":resources:images/items/keyYellow.png", ITEM_SCALING)
+                        ':resources:images/items/keyYellow.png', ITEM_SCALING)
                     key.center_x = x
                     key.center_y = y
                     self.key_list.append(key)
 
-                elif char == "D":
+                elif char == 'D':
                     door = arcade.Sprite(
-                        ":resources:images/tiles/doorClosed_mid.png", DOOR_SCALING)
+                        ':resources:images/tiles/doorClosed_mid.png', DOOR_SCALING)
                     door.center_x = x
                     door.center_y = y
                     self.door_list.append(door)
 
-                elif char == "M":
+                elif char == 'M':
                     monster = arcade.Sprite(
-                        ":resources:images/animated_characters/zombie/zombie_idle.png",
+                        ':resources:images/animated_characters/zombie/zombie_idle.png',
                         CHARACTER_SCALING
                     )
                     monster.center_x = x
                     monster.center_y = y
                     self.monster_list.append(monster)
 
-                elif char == "T":
+                elif char == 'T':
                     treasure = arcade.Sprite(
-                        ":resources:images/items/gemBlue.png", ITEM_SCALING)
+                        ':resources:images/items/gemBlue.png', ITEM_SCALING)
                     treasure.center_x = x
                     treasure.center_y = y
                     self.treasure_list.append(treasure)
 
         if not player_found:
-            print(" ERREUR: Joueur introuvable!")
+            print(' ERREUR: Joueur introuvable!')
             return
 
         self.physics_engine = arcade.PhysicsEngineSimple(
@@ -106,8 +106,8 @@ class Game(arcade.Window):
             [self.wall_list, self.door_list]
         )
 
-        print(f" {len(self.wall_list)} murs, {len(self.key_list)} clés, "
-              f"{len(self.monster_list)} monstres, {len(self.door_list)} portes")
+        print(f' {len(self.wall_list)} murs, {len(self.key_list)} clés, '
+              f'{len(self.monster_list)} monstres, {len(self.door_list)} portes')
 
     def on_draw(self):
         self.clear()
@@ -134,18 +134,18 @@ class Game(arcade.Window):
             self.player_move_timer = random.uniform(0.1, 0.4)  # secondes
 
             # Choisit une nouvelle direction aléatoire
-            direction = random.choice(["UP", "DOWN", "LEFT", "RIGHT"])
+            direction = random.choice(['UP', 'DOWN', 'LEFT', 'RIGHT'])
 
-            if direction == "UP":
+            if direction == 'UP':
                 self.player_sprite.change_y = PLAYER_MOVEMENT_SPEED
                 self.player_sprite.change_x = 0
-            elif direction == "DOWN":
+            elif direction == 'DOWN':
                 self.player_sprite.change_y = -PLAYER_MOVEMENT_SPEED
                 self.player_sprite.change_x = 0
-            elif direction == "LEFT":
+            elif direction == 'LEFT':
                 self.player_sprite.change_x = -PLAYER_MOVEMENT_SPEED
                 self.player_sprite.change_y = 0
-            elif direction == "RIGHT":
+            elif direction == 'RIGHT':
                 self.player_sprite.change_x = PLAYER_MOVEMENT_SPEED
                 self.player_sprite.change_y = 0
 
@@ -157,8 +157,8 @@ class Game(arcade.Window):
         for key in key_hit_list:
             key.remove_from_sprite_lists()
             self.key_count += 1
-            self.key_text.text = f"Clés : {self.key_count}"
-            print(f" Clé ramassée! Total: {self.key_count}")
+            self.key_text.text = f'Clés : {self.key_count}'
+            print(f' Clé ramassée! Total: {self.key_count}')
 
         # Ouvrir les portes
         for door in self.door_list:
@@ -167,8 +167,8 @@ class Game(arcade.Window):
             if distance < 47 and self.key_count > 0:
                 door.remove_from_sprite_lists()
                 self.key_count -= 1
-                self.key_text.text = f"Clés : {self.key_count}"
-                print(f" Porte ouverte! Clés restantes: {self.key_count}")
+                self.key_text.text = f'Clés : {self.key_count}'
+                print(f' Porte ouverte! Clés restantes: {self.key_count}')
                 self.physics_engine = arcade.PhysicsEngineSimple(
                     self.player_sprite,
                     [self.wall_list, self.door_list]
@@ -179,12 +179,12 @@ class Game(arcade.Window):
         monster_hit_list = arcade.check_for_collision_with_list(
             self.player_sprite, self.monster_list)
         if len(monster_hit_list) > 0:
-            print(" Game Over! Restart...")
-            self.setup()  # Le joueur "réapparaît" au début
+            print(' Game Over! Restart...')
+            self.setup()
 
         # Trésor = victoire
         treasure_hit_list = arcade.check_for_collision_with_list(
             self.player_sprite, self.treasure_list)
         if len(treasure_hit_list) > 0:
-            print(" VICTOIRE! Vous avez trouvé le trésor!")
+            print(' VICTOIRE! Vous avez trouvé le trésor!')
             arcade.exit()
