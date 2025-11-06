@@ -1,65 +1,10 @@
 import arcade
 
 
-map_layout = [
-    "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWW",
-    "W                            W",
-    "W  P                         W",
-    "W                            W",
-    "W                            W",
-    "W     WWWWWWWWWWWWWWW        W",
-    "W     W             W        W",
-    "W     W             W        W",
-    "W     W    WWWWW    W    M   W",
-    "W     W    W   W    W        W",
-    "W     W    W   W    W        W",
-    "W     W    W T W    WWWWW    W",
-    "W     WWWWWW   W    W        W",
-    "W              W    W   M    W",
-    "W      D       W    W        W",
-    "W              W    WWWWW    W",
-    "WWWWWWWWW      W             W",
-    "W              W             W",
-    "W  M           W             W",
-    "W     WWWWWWWWWWWWWWWW       W",
-    "W     W              W       W",
-    "W     W     M        W       W",
-    "W     W              W M     W",
-    "W     WWWWWWW        W       W",
-    "W                    W   K   W",
-    "W                    W       W",
-    "W                            W",
-    "W                        M   W",
-    "W                            W",
-    "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWW",
-]
-
-# --- Constantes ---
-REWARD_WALL = -10
-REWARD_DEFAULT = -1
-REWARD_GOAL = 1000
-REWARD_OUT = -10
-
-CHARACTER_SCALING = 0.6
-TILE_SCALING = 0.5
-ITEM_SCALING = 0.5
-DOOR_SCALING = 0.4
-BASE_TILE_SIZE = 64
-TILE_PIXEL_SIZE = int(BASE_TILE_SIZE * TILE_SCALING)
-MAP_HEIGHT_TILES = len(map_layout)
-MAP_WIDTH_TILES = len(map_layout[0])
-SCREEN_WIDTH = MAP_WIDTH_TILES * TILE_PIXEL_SIZE
-SCREEN_HEIGHT = MAP_HEIGHT_TILES * TILE_PIXEL_SIZE
-SCREEN_TITLE = "MINI DUNGEON"
-PLAYER_MOVEMENT_SPEED = 5
-
-print(
-    f"=== Donjon {MAP_WIDTH_TILES}x{MAP_HEIGHT_TILES} ({SCREEN_WIDTH}x{SCREEN_HEIGHT}px) ===")
-
-
 class Game(arcade.Window):
-    def __init__(self):
+    def __init__(self, agent):
         super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
+        self.agent = agent
         self.wall_list = None
         self.player_list = None
         self.key_list = None
@@ -81,7 +26,8 @@ class Game(arcade.Window):
         self.key_count = 0
         self.key_text = arcade.Text(
             f"Clés : {self.key_count}",
-            10, 10,
+            10,
+            10,
             arcade.color.WHITE, 18
         )
 
@@ -91,6 +37,9 @@ class Game(arcade.Window):
         self.door_list = arcade.SpriteList()
         self.monster_list = arcade.SpriteList()
         self.treasure_list = arcade.SpriteList()
+
+        # Réinitialise le minuteur de mouvement
+        self.player_move_timer = 0.0
 
         player_found = False
 
@@ -109,14 +58,14 @@ class Game(arcade.Window):
 
                 elif char == "P":
                     self.player_sprite = arcade.Sprite(
-                        ":resources:/images/test_textures/anim.gif",
+                        ":resources:images/animated_characters/female_person/femalePerson_idle.png",
                         CHARACTER_SCALING
                     )
                     self.player_sprite.center_x = x
                     self.player_sprite.center_y = y
                     self.player_list.append(self.player_sprite)
                     player_found = True
-                    print(f" Joueur placé en ({x:.0f}, {y:.0f})")
+                    print(f"🎮 Joueur placé en ({x:.0f}, {y:.0f})")
 
                 elif char == "K":
                     key = arcade.Sprite(
@@ -128,7 +77,6 @@ class Game(arcade.Window):
                 elif char == "D":
                     door = arcade.Sprite(
                         ":resources:images/tiles/doorClosed_mid.png", DOOR_SCALING)
-
                     door.center_x = x
                     door.center_y = y
                     self.door_list.append(door)
@@ -172,26 +120,35 @@ class Game(arcade.Window):
         self.key_text.draw()
 
     def on_key_press(self, key, modifiers):
-        if key == arcade.key.UP or key == arcade.key.W:
-            self.player_sprite.change_y = PLAYER_MOVEMENT_SPEED
-        elif key == arcade.key.DOWN or key == arcade.key.S:
-            self.player_sprite.change_y = -PLAYER_MOVEMENT_SPEED
-        elif key == arcade.key.LEFT or key == arcade.key.A:
-            self.player_sprite.change_x = -PLAYER_MOVEMENT_SPEED
-        elif key == arcade.key.RIGHT or key == arcade.key.D:
-            self.player_sprite.change_x = PLAYER_MOVEMENT_SPEED
+        pass
 
     def on_key_release(self, key, modifiers):
-        if key == arcade.key.UP or key == arcade.key.W:
-            self.player_sprite.change_y = 0
-        elif key == arcade.key.DOWN or key == arcade.key.S:
-            self.player_sprite.change_y = 0
-        elif key == arcade.key.LEFT or key == arcade.key.A:
-            self.player_sprite.change_x = 0
-        elif key == arcade.key.RIGHT or key == arcade.key.D:
-            self.player_sprite.change_x = 0
+        pass
 
     def on_update(self, delta_time):
+
+        self.player_move_timer -= delta_time
+
+        if self.player_move_timer <= 0:
+            # Choisit une nouvelle durée aléatoire
+            self.player_move_timer = random.uniform(0.1, 0.4)  # secondes
+
+            # Choisit une nouvelle direction aléatoire
+            direction = random.choice(["UP", "DOWN", "LEFT", "RIGHT"])
+
+            if direction == "UP":
+                self.player_sprite.change_y = PLAYER_MOVEMENT_SPEED
+                self.player_sprite.change_x = 0
+            elif direction == "DOWN":
+                self.player_sprite.change_y = -PLAYER_MOVEMENT_SPEED
+                self.player_sprite.change_x = 0
+            elif direction == "LEFT":
+                self.player_sprite.change_x = -PLAYER_MOVEMENT_SPEED
+                self.player_sprite.change_y = 0
+            elif direction == "RIGHT":
+                self.player_sprite.change_x = PLAYER_MOVEMENT_SPEED
+                self.player_sprite.change_y = 0
+
         self.physics_engine.update()
 
         # Ramasser les clés
@@ -203,18 +160,15 @@ class Game(arcade.Window):
             self.key_text.text = f"Clés : {self.key_count}"
             print(f" Clé ramassée! Total: {self.key_count}")
 
-        # Vérifier si le joueur est PROCHE d'une porte
+        # Ouvrir les portes
         for door in self.door_list:
-            # Calculer la distance entre le joueur et la porte
             distance = arcade.get_distance_between_sprites(
                 self.player_sprite, door)
-            print(f" Distance : {distance}")
             if distance < 47 and self.key_count > 0:
                 door.remove_from_sprite_lists()
                 self.key_count -= 1
                 self.key_text.text = f"Clés : {self.key_count}"
                 print(f" Porte ouverte! Clés restantes: {self.key_count}")
-                # Recréer le moteur physique sans cette porte
                 self.physics_engine = arcade.PhysicsEngineSimple(
                     self.player_sprite,
                     [self.wall_list, self.door_list]
@@ -226,7 +180,7 @@ class Game(arcade.Window):
             self.player_sprite, self.monster_list)
         if len(monster_hit_list) > 0:
             print(" Game Over! Restart...")
-            self.setup()
+            self.setup()  # Le joueur "réapparaît" au début
 
         # Trésor = victoire
         treasure_hit_list = arcade.check_for_collision_with_list(
@@ -234,13 +188,3 @@ class Game(arcade.Window):
         if len(treasure_hit_list) > 0:
             print(" VICTOIRE! Vous avez trouvé le trésor!")
             arcade.exit()
-
-
-def main():
-    window = MyGame()
-    window.setup()
-    arcade.run()
-
-
-if __name__ == "__main__":
-    main()
