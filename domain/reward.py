@@ -1,7 +1,10 @@
-class Rewards:
-    REWARD_WALL: int = -10
-    REWARD_DEFAULT: int = -1
-    REWARD_KEY: int = 10
-    REWARD_GOAL: int = 1000
-    REWARD_OUT: int = -10
-    REWARD_MONSTER: int = -100
+from enum import IntEnum
+
+
+class Rewards(IntEnum):
+    WALL = -10
+    DEFAULT = -1
+    KEY = 10
+    GOAL = 1000
+    OUT = -10
+    MONSTER = -100

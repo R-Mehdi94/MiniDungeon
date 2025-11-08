@@ -4,10 +4,11 @@ from .position import Position
 
 
 class State:
-    """État MDP minimal pour Q-learning.
+    '''
+    État MDP minimal pour Q-learning.
     On encode (position joueur, possession de clé (0/1)).
     Les monstres sont modélisés par la stochasticité de l'environnement.
-    """
+    '''
     __player: Position
     __has_key: bool
 
