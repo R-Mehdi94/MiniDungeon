@@ -9,7 +9,6 @@ REWARD_KEY = 10
 REWARD_GOAL = 1000
 REWARD_OUT = -10
 
-
 class Environment:
     def __init__(self, map_layout):
         self.map = {}

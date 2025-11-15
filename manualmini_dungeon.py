@@ -54,7 +54,8 @@ SCREEN_TITLE = 'MINI DUNGEON'
 PLAYER_MOVEMENT_SPEED = 5
 
 print(
-    f'=== Donjon {MAP_WIDTH_TILES}x{MAP_HEIGHT_TILES} ({SCREEN_WIDTH}x{SCREEN_HEIGHT}px) ===')
+    f'=== Donjon {MAP_WIDTH_TILES}x{MAP_HEIGHT_TILES} ({SCREEN_WIDTH}x{SCREEN_HEIGHT}px) ==='
+)
 
 
 class Game(arcade.Window):

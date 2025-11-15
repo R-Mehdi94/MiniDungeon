@@ -1,7 +1,7 @@
 from enum import IntEnum
 
 
-class Rewards(IntEnum):
+class Reward(IntEnum):
     WALL = -10
     DEFAULT = -1
     KEY = 10
