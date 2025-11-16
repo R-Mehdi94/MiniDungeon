@@ -137,7 +137,7 @@ SCREEN_TITLE: str = 'MINI DUNGEON'
 PLAYER_MOVEMENT_SPEED: int = 30
 
 print(
-    f'=== Donjon {MAP_WIDTH_TILES}x{MAP_HEIGHT_TILES} '
+    f'=== DUNGEON {MAP_WIDTH_TILES}x{MAP_HEIGHT_TILES} '
     f'({SCREEN_WIDTH}x{SCREEN_HEIGHT}px) ==='
 )
 
@@ -321,10 +321,10 @@ class MyGame(arcade.Window):
         arcade.set_background_color(arcade.color.DARK_BROWN)
 
     def setup(self) -> None:
-        print('\n=== Chargement du niveau ===')
+        print('\n=== LEVEL LOADING... ===')
         self.key_count = 0
         self.key_text = arcade.Text(
-            f'Clés : {self.key_count}',
+            f'Keys: {self.key_count}',
             10,
             10,
             arcade.color.WHITE,
@@ -412,7 +412,7 @@ class MyGame(arcade.Window):
                     self.treasure_list.append(treasure)
 
         if not player_found:
-            print(' ERREUR: Joueur introuvable!')
+            print(' ERROR: PLAYER NOT FOUND!')
             return
 
         self.physics_engine = arcade.PhysicsEngineSimple(
@@ -421,8 +421,8 @@ class MyGame(arcade.Window):
         )
 
         print(
-            f' {len(self.wall_list)} murs, {len(self.key_list)} clés, '
-            f'{len(self.monster_list)} monstres, {len(self.door_list)} portes'
+            f' {len(self.wall_list)} walls, {len(self.key_list)} keys, '
+            f'{len(self.monster_list)} monsters, {len(self.door_list)} doors'
         )
 
     def on_draw(self) -> None:
@@ -476,8 +476,8 @@ class MyGame(arcade.Window):
         for key in key_hit_list:
             key.remove_from_sprite_lists()
             self.key_count += 1
-            self.key_text.text = f'Clés : {self.key_count}'
-            print(f' Clé ramassée! Total: {self.key_count}')
+            self.key_text.text = f'KEY: {self.key_count}'
+            print(f'KEY COLLECTED! TOTAL: {self.key_count}')
 
         # Ouvrir les portes
         for door in self.door_list:
@@ -488,9 +488,9 @@ class MyGame(arcade.Window):
             if distance < 47 and self.key_count > 0:
                 door.remove_from_sprite_lists()
                 self.key_count -= 1
-                self.key_text.text = f'Clés : {self.key_count}'
+                self.key_text.text = f'KEYS: {self.key_count}'
                 print(
-                    f' Porte ouverte! Clés restantes: {self.key_count}'
+                    f'DOOR OPEN! KEYS REMAINING: {self.key_count}'
                 )
                 self.physics_engine = arcade.PhysicsEngineSimple(
                     self.player_sprite,
@@ -504,7 +504,7 @@ class MyGame(arcade.Window):
             self.monster_list,
         )
         if len(monster_hit_list) > 0:
-            print(' Game Over! Restart...')
+            print('GAME OVER')
             self.setup()
 
         # Trésor = victoire
@@ -513,7 +513,7 @@ class MyGame(arcade.Window):
             self.treasure_list,
         )
         if len(treasure_hit_list) > 0:
-            print(' VICTOIRE! Vous avez trouvé le trésor!')
+            print('VICTORY YOU HAVE FOUND THE TREASURE!')
             arcade.exit()
 
 
