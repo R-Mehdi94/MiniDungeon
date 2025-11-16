@@ -3,8 +3,9 @@ from __future__ import annotations
 import arcade
 import random
 from random import choice
-from typing import List, TypeAlias, Literal
+from typing import List, TypeAlias
 from collections.abc import Mapping
+from enum import Enum
 
 
 class Position:
@@ -67,6 +68,24 @@ class Movement:
         return f"Movement(row={self.__row}, column={self.__column})"
 
 
+class Action(Enum):
+    UP = (-1, 0)
+    DOWN = (1, 0)
+    LEFT = (0, -1)
+    RIGHT = (0, 1)
+
+    def to_movement(self) -> Movement:
+        row_delta, col_delta = self.value
+        return Movement(row_delta, col_delta)
+
+
+# Aliases optionnels si on veut des constantes plus parlantes
+ACTION_UP: Action = Action.UP
+ACTION_DOWN: Action = Action.DOWN
+ACTION_LEFT: Action = Action.LEFT
+ACTION_RIGHT: Action = Action.RIGHT
+
+
 maze_1: List[str] = [
     '########################################',
     '# P                                    #',
@@ -89,8 +108,6 @@ maze_1: List[str] = [
     '########################################',
 ]
 
-Action: TypeAlias = Literal['UP', 'DOWN', 'LEFT', 'RIGHT']
-ActionDelta: TypeAlias = tuple[int, int]
 QValues: TypeAlias = dict[Action, float]
 QTable: TypeAlias = dict[Position, QValues]
 
@@ -105,18 +122,6 @@ REWARD_DEFAULT: int = -1
 REWARD_KEY: int = 10
 REWARD_GOAL: int = 1000
 REWARD_OUT: int = -10
-
-ACTION_UP: Action = 'UP'
-ACTION_DOWN: Action = 'DOWN'
-ACTION_LEFT: Action = 'LEFT'
-ACTION_RIGHT: Action = 'RIGHT'
-
-ACTIONS: dict[Action, ActionDelta] = {
-    ACTION_UP: (-1, 0),
-    ACTION_DOWN: (1, 0),
-    ACTION_LEFT: (0, -1),
-    ACTION_RIGHT: (0, 1),
-}
 
 TEXTURE_SIZE: int = 128
 TILE_PIXEL_SIZE: int = 32
@@ -171,12 +176,13 @@ class Agent:
 
     def get_radar(self, pos: Position) -> dict[Action, str | None]:
         radar: dict[Action, str | None] = {}
-        for direction, (dr, dc) in ACTIONS.items():
-            check_pos: Position = Position(pos.get_row() + dr, pos.get_column() + dc)
+        for action in Action:
+            movement: Movement = action.to_movement()
+            check_pos: Position = pos.calculate_next_position(movement)
             if check_pos in self.env.map:
-                radar[direction] = self.env.map[check_pos]
+                radar[action] = self.env.map[check_pos]
             else:
-                radar[direction] = None  # en dehors de la map
+                radar[action] = None  # en dehors de la map
         return radar
 
     def do(
@@ -189,17 +195,17 @@ class Agent:
 
         if self.pos not in self.qtable:
             self.qtable[self.pos] = {
-                ACTION_UP: 0.0,
-                ACTION_DOWN: 0.0,
-                ACTION_LEFT: 0.0,
-                ACTION_RIGHT: 0.0,
+                Action.UP: 0.0,
+                Action.DOWN: 0.0,
+                Action.LEFT: 0.0,
+                Action.RIGHT: 0.0,
             }
         if pos not in self.qtable:
             self.qtable[pos] = {
-                ACTION_UP: 0.0,
-                ACTION_DOWN: 0.0,
-                ACTION_LEFT: 0.0,
-                ACTION_RIGHT: 0.0,
+                Action.UP: 0.0,
+                Action.DOWN: 0.0,
+                Action.LEFT: 0.0,
+                Action.RIGHT: 0.0,
             }
 
         delta: float = learning_rate * (
@@ -217,7 +223,7 @@ class Agent:
     def best_action(self) -> Action:
         if self.pos in self.qtable:
             return choose_best_action(self.qtable[self.pos])
-        return choice(list(ACTIONS.keys()))
+        return choice(list(Action))
 
 
 class Environment:
@@ -252,8 +258,8 @@ class Environment:
         self.height = row
 
     def do(self, pos: Position, action: Action) -> tuple[Position, int]:
-        move: ActionDelta = ACTIONS[action]
-        new_pos = Position(pos.get_row() + move[0], pos.get_column() + move[1])
+        movement: Movement = action.to_movement()
+        new_pos: Position = pos.calculate_next_position(movement)
 
         reward: int
         if new_pos in self.map:
@@ -273,7 +279,7 @@ class Environment:
         return pos, reward
 
 
-class MyGame(arcade.Window):
+class Game(arcade.Window):
     agent: Agent
     wall_list: arcade.SpriteList[arcade.Sprite]
     player_list: arcade.SpriteList[arcade.Sprite]
@@ -448,27 +454,23 @@ class MyGame(arcade.Window):
             # Choisit une nouvelle durée aléatoire
             self.player_move_timer = random.uniform(0.1, 0.4)
 
-            # Choisit une nouvelle direction aléatoire
-            direction: Action = random.choice(
-                ['UP', 'DOWN', 'LEFT', 'RIGHT']
-            )  # type: ignore[assignment]
+            direction: Action = choice(list(Action))
 
-            if direction == 'UP':
+            if direction is Action.UP:
                 self.player_sprite.change_y = PLAYER_MOVEMENT_SPEED
                 self.player_sprite.change_x = 0
-            elif direction == 'DOWN':
+            elif direction is Action.DOWN:
                 self.player_sprite.change_y = -PLAYER_MOVEMENT_SPEED
                 self.player_sprite.change_x = 0
-            elif direction == 'LEFT':
+            elif direction is Action.LEFT:
                 self.player_sprite.change_x = -PLAYER_MOVEMENT_SPEED
                 self.player_sprite.change_y = 0
-            elif direction == 'RIGHT':
+            elif direction is Action.RIGHT:
                 self.player_sprite.change_x = PLAYER_MOVEMENT_SPEED
                 self.player_sprite.change_y = 0
 
         self.physics_engine.update()
 
-        # Ramasser les clés
         key_hit_list = arcade.check_for_collision_with_list(
             self.player_sprite,
             self.key_list,
@@ -479,7 +481,6 @@ class MyGame(arcade.Window):
             self.key_text.text = f'KEY: {self.key_count}'
             print(f'KEY COLLECTED! TOTAL: {self.key_count}')
 
-        # Ouvrir les portes
         for door in self.door_list:
             distance: float = arcade.get_distance_between_sprites(
                 self.player_sprite,
@@ -498,7 +499,6 @@ class MyGame(arcade.Window):
                 )
                 break
 
-        # Collision avec monstres
         monster_hit_list = arcade.check_for_collision_with_list(
             self.player_sprite,
             self.monster_list,
@@ -507,7 +507,6 @@ class MyGame(arcade.Window):
             print('GAME OVER')
             self.setup()
 
-        # Trésor = victoire
         treasure_hit_list = arcade.check_for_collision_with_list(
             self.player_sprite,
             self.treasure_list,
@@ -521,7 +520,7 @@ def main() -> None:
     env = Environment(maze_1)
     agent = Agent(env)
 
-    window = MyGame(agent)
+    window = Game(agent)
     window.setup()
     arcade.run()
 
