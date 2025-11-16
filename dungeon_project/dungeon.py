@@ -3,7 +3,7 @@ from __future__ import annotations
 import arcade
 import random
 from random import choice
-from typing import TypeAlias, Literal
+from typing import List, TypeAlias, Literal
 from collections.abc import Mapping
 
 
@@ -12,10 +12,6 @@ class Position:
     __column: int
 
     def __init__(self, row: int, column: int) -> None:
-        if not isinstance(row, int):  # pyright: ignore[reportUnnecessaryIsInstance]
-            raise ValueError('`row` must be of type `int`.')
-        if not isinstance(column, int):  # pyright: ignore[reportUnnecessaryIsInstance]
-            raise ValueError('`column` must be of type `int`.')
         self.__row = row
         self.__column = column
 
@@ -23,17 +19,19 @@ class Position:
         return self.__row
 
     def set_row(self, row: int) -> None:
-        if not isinstance(row, int):  # pyright: ignore[reportUnnecessaryIsInstance]
-            raise ValueError('`row` must be of type `int`.')
         self.__row = row
 
     def get_column(self) -> int:
         return self.__column
 
     def set_column(self, column: int) -> None:
-        if not isinstance(column, int):  # pyright: ignore[reportUnnecessaryIsInstance]
-            raise ValueError('`column` must be of type `int`.')
         self.__column = column
+
+    def calculate_next_position(self, movement: Movement) -> Position:
+        return Position(
+            self.__row + movement.get_row(),
+            self.__column + movement.get_column()
+        )
 
     def __hash__(self) -> int:
         return hash((self.__row, self.__column))
@@ -42,40 +40,59 @@ class Position:
         return f"Position({self.__row}, {self.__column})"
 
 
-# ---- Types ----
+class Movement:
+    __row: int
+    __column: int
 
-map_layout = [
+    def __init__(self, row: int, column: int) -> None:
+        self.__row = row
+        self.__column = column
+
+    def get_row(self) -> int:
+        return self.__row
+
+    def set_row(self, row: int) -> None:
+        self.__row = row
+
+    def get_column(self) -> int:
+        return self.__column
+
+    def set_column(self, column: int) -> None:
+        self.__column = column
+
+    def as_tuple(self) -> tuple[int, int]:
+        return (self.__row, self.__column)
+
+    def __repr__(self) -> str:
+        return f"Movement(row={self.__row}, column={self.__column})"
+
+
+maze_1: List[str] = [
     '########################################',
-    '#                                      #',
     '# P                                    #',
+    '#                                      #',
     '#                                      #',
     '#       ##########                     #',
     '#       #        #                     #',
     '#         M         #####              #',
     '#                        T             #',
-    '#    #####        D                    #',
+    '##########        D                    #',
     '#     M                       M        #',
     '#           #####   #                  #',
     '#                   ######             #',
     '#   M                         K        #',
-    '#                                      #',
-    '#         ######                       #',
-    '#                           M          #',
-    '#                                      #',
-    '#                                      #',
-    '#                                      #',
+    '#         #                            #',
+    '#         ############                 #',
+    '#         #                 M          #',
+    '#         #                            #',
+    '#         #                            #',
     '########################################',
 ]
-
 
 Action: TypeAlias = Literal['UP', 'DOWN', 'LEFT', 'RIGHT']
 ActionDelta: TypeAlias = tuple[int, int]
 QValues: TypeAlias = dict[Action, float]
 QTable: TypeAlias = dict[Position, QValues]
-
-
-# --- Constantes ---
-
 
 BASE_TILE_SIZE: int = 128
 MAP_WALL: str = '#'
@@ -102,11 +119,8 @@ ACTIONS: dict[Action, ActionDelta] = {
 }
 
 TEXTURE_SIZE: int = 128
+TILE_PIXEL_SIZE: int = 32
 
-# Taille d'UNE case de ta grille à l'écran (tu peux ajuster)
-TILE_PIXEL_SIZE: int = 32  # essaie 32, 48 ou 64
-
-# Même scaling pour tout le monde
 GLOBAL_SCALING: float = TILE_PIXEL_SIZE / TEXTURE_SIZE
 
 CHARACTER_SCALING: float = GLOBAL_SCALING
@@ -114,8 +128,8 @@ TILE_SCALING: float = GLOBAL_SCALING
 ITEM_SCALING: float = GLOBAL_SCALING
 DOOR_SCALING: float = GLOBAL_SCALING
 
-MAP_HEIGHT_TILES: int = len(map_layout)
-MAP_WIDTH_TILES: int = len(map_layout[0])
+MAP_HEIGHT_TILES: int = len(maze_1)
+MAP_WIDTH_TILES: int = len(maze_1[0])
 
 SCREEN_WIDTH: int = MAP_WIDTH_TILES * TILE_PIXEL_SIZE
 SCREEN_HEIGHT: int = MAP_HEIGHT_TILES * TILE_PIXEL_SIZE
@@ -128,8 +142,8 @@ print(
 )
 
 
-def arg_max(table: Mapping[Action, float]) -> Action:
-    return max(table, key=table.get)
+def choose_best_action(table: Mapping[Action, float]) -> Action:
+    return max(table, key=lambda action: table[action])
 
 
 class Agent:
@@ -202,7 +216,7 @@ class Agent:
 
     def best_action(self) -> Action:
         if self.pos in self.qtable:
-            return arg_max(self.qtable[self.pos])
+            return choose_best_action(self.qtable[self.pos])
         return choice(list(ACTIONS.keys()))
 
 
@@ -330,7 +344,7 @@ class MyGame(arcade.Window):
 
         player_found: bool = False
 
-        for row_index, row in enumerate(map_layout):
+        for row_index, row in enumerate(maze_1):
             for col_index, char in enumerate(row):
                 x: float = (
                     col_index * TILE_PIXEL_SIZE + TILE_PIXEL_SIZE / 2
@@ -505,7 +519,7 @@ class MyGame(arcade.Window):
 
 
 def main() -> None:
-    env = Environment(map_layout)
+    env = Environment(maze_1)
     agent = Agent(env)
 
     window = MyGame(agent)
