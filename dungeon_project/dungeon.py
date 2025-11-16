@@ -6,6 +6,42 @@ from random import choice
 from typing import TypeAlias, Literal
 from collections.abc import Mapping
 
+
+class Position:
+    __row: int
+    __column: int
+
+    def __init__(self, row: int, column: int) -> None:
+        if not isinstance(row, int):  # pyright: ignore[reportUnnecessaryIsInstance]
+            raise ValueError('`row` must be of type `int`.')
+        if not isinstance(column, int):  # pyright: ignore[reportUnnecessaryIsInstance]
+            raise ValueError('`column` must be of type `int`.')
+        self.__row = row
+        self.__column = column
+
+    def get_row(self) -> int:
+        return self.__row
+
+    def set_row(self, row: int) -> None:
+        if not isinstance(row, int):  # pyright: ignore[reportUnnecessaryIsInstance]
+            raise ValueError('`row` must be of type `int`.')
+        self.__row = row
+
+    def get_column(self) -> int:
+        return self.__column
+
+    def set_column(self, column: int) -> None:
+        if not isinstance(column, int):  # pyright: ignore[reportUnnecessaryIsInstance]
+            raise ValueError('`column` must be of type `int`.')
+        self.__column = column
+
+    def __hash__(self) -> int:
+        return hash((self.__row, self.__column))
+
+    def __repr__(self) -> str:
+        return f"Position({self.__row}, {self.__column})"
+
+
 # ---- Types ----
 
 map_layout = [
@@ -32,7 +68,6 @@ map_layout = [
 ]
 
 
-Position: TypeAlias = tuple[int, int]
 Action: TypeAlias = Literal['UP', 'DOWN', 'LEFT', 'RIGHT']
 ActionDelta: TypeAlias = tuple[int, int]
 QValues: TypeAlias = dict[Action, float]
@@ -85,7 +120,7 @@ MAP_WIDTH_TILES: int = len(map_layout[0])
 SCREEN_WIDTH: int = MAP_WIDTH_TILES * TILE_PIXEL_SIZE
 SCREEN_HEIGHT: int = MAP_HEIGHT_TILES * TILE_PIXEL_SIZE
 SCREEN_TITLE: str = 'MINI DUNGEON'
-PLAYER_MOVEMENT_SPEED: int = 5
+PLAYER_MOVEMENT_SPEED: int = 30
 
 print(
     f'=== Donjon {MAP_WIDTH_TILES}x{MAP_HEIGHT_TILES} '
@@ -123,7 +158,7 @@ class Agent:
     def get_radar(self, pos: Position) -> dict[Action, str | None]:
         radar: dict[Action, str | None] = {}
         for direction, (dr, dc) in ACTIONS.items():
-            check_pos: Position = (pos[0] + dr, pos[1] + dc)
+            check_pos: Position = Position(pos.get_row() + dr, pos.get_column() + dc)
             if check_pos in self.env.map:
                 radar[direction] = self.env.map[check_pos]
             else:
@@ -187,7 +222,7 @@ class Environment:
 
         for line in map_layout:
             for char in line:
-                pos: Position = (row, col)
+                pos = Position(row, col)
                 self.map[pos] = char
                 if char == MAP_START:
                     self.start = pos
@@ -204,7 +239,7 @@ class Environment:
 
     def do(self, pos: Position, action: Action) -> tuple[Position, int]:
         move: ActionDelta = ACTIONS[action]
-        new_pos: Position = (pos[0] + move[0], pos[1] + move[1])
+        new_pos = Position(pos.get_row() + move[0], pos.get_column() + move[1])
 
         reward: int
         if new_pos in self.map:
