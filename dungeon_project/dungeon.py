@@ -372,7 +372,7 @@ class MyGame(arcade.Window):
                     self.player_sprite.center_y = y
                     self.player_list.append(self.player_sprite)
                     player_found = True
-                    print(f'🎮 Joueur placé en ({x:.0f}, {y:.0f})')
+                    print(f'PLAYER STARTING POSITION: ({x:.0f}, {y:.0f})')
 
                 elif char == 'K':
                     key = arcade.Sprite(
