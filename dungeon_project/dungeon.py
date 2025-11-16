@@ -275,12 +275,12 @@ class Environment:
 
 class MyGame(arcade.Window):
     agent: Agent
-    wall_list: arcade.SpriteList
-    player_list: arcade.SpriteList
-    key_list: arcade.SpriteList
-    door_list: arcade.SpriteList
-    monster_list: arcade.SpriteList
-    treasure_list: arcade.SpriteList
+    wall_list: arcade.SpriteList[arcade.Sprite]
+    player_list: arcade.SpriteList[arcade.Sprite]
+    key_list: arcade.SpriteList[arcade.Sprite]
+    door_list: arcade.SpriteList[arcade.Sprite]
+    monster_list: arcade.SpriteList[arcade.Sprite]
+    treasure_list: arcade.SpriteList[arcade.Sprite]
     player_sprite: arcade.Sprite
     physics_engine: arcade.PhysicsEngineSimple
     key_count: int
@@ -298,7 +298,6 @@ class MyGame(arcade.Window):
         self.monster_list = arcade.SpriteList()
         self.treasure_list = arcade.SpriteList()
 
-        # placeholders; seront remplacés dans setup()
         self.player_sprite = arcade.Sprite(
             ':resources:images/tiles/boxCrate_double.png',
             TILE_SCALING,
@@ -436,10 +435,10 @@ class MyGame(arcade.Window):
         self.player_list.draw()
         self.key_text.draw()
 
-    def on_key_press(self, key: int, modifiers: int) -> None:
+    def on_key_press(self, symbol: int, modifiers: int) -> None:
         pass
 
-    def on_key_release(self, key: int, modifiers: int) -> None:
+    def on_key_release(self, symbol: int, modifiers: int) -> None:
         pass
 
     def on_update(self, delta_time: float) -> None:
