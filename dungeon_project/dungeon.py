@@ -45,26 +45,26 @@ class Position:
 # ---- Types ----
 
 map_layout = [
-    'WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW',
-    'W                                      W',
-    'W P                                    W',
-    'W                                      W',
-    'W       WWWWWWWWWW                     W',
-    'W       W        W                     W',
-    'W         M         WWWWW              W',
-    'W                        T             W',
-    'W    WWWWW        D                    W',
-    'W     M                       M        W',
-    'W           WWWWW   W                  W',
-    'W                   WWWWWW             W',
-    'W   M                         K        W',
-    'W                                      W',
-    'W         WWWWWW                       W',
-    'W                           M          W',
-    'W                                      W',
-    'W                                      W',
-    'W                                      W',
-    'WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW',
+    '########################################',
+    '#                                      #',
+    '# P                                    #',
+    '#                                      #',
+    '#       ##########                     #',
+    '#       #        #                     #',
+    '#         M         #####              #',
+    '#                        T             #',
+    '#    #####        D                    #',
+    '#     M                       M        #',
+    '#           #####   #                  #',
+    '#                   ######             #',
+    '#   M                         K        #',
+    '#                                      #',
+    '#         ######                       #',
+    '#                           M          #',
+    '#                                      #',
+    '#                                      #',
+    '#                                      #',
+    '########################################',
 ]
 
 
@@ -78,7 +78,7 @@ QTable: TypeAlias = dict[Position, QValues]
 
 
 BASE_TILE_SIZE: int = 128
-MAP_WALL: str = 'W'
+MAP_WALL: str = '#'
 MAP_GOAL: str = 'T'
 MAP_START: str = 'P'
 MAP_KEY: str = 'K'
@@ -340,7 +340,7 @@ class MyGame(arcade.Window):
                     + TILE_PIXEL_SIZE / 2
                 )
 
-                if char == 'W':
+                if char == '#':
                     wall = arcade.Sprite(
                         ':resources:images/tiles/grassCenter.png',
                         TILE_SCALING,
