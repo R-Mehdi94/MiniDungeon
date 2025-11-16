@@ -9,9 +9,52 @@ from pyglet.event import EVENT_HANDLE_STATE
 
 from matplotlib import pyplot
 
+
+class Position:
+    __abscissa: int
+    __ordinate: int
+
+    def __init__(self, abscissa: int, ordinate: int) -> None:
+        if not isinstance(abscissa, int):  # pyright: ignore[reportUnnecessaryIsInstance]
+            raise ValueError('`abscissa` must be of type `int`.')
+        if not isinstance(ordinate, int):  # pyright: ignore[reportUnnecessaryIsInstance]
+            raise ValueError('`ordinate` must be of type `int`.')
+        self.__abscissa = abscissa   # ligne (row)
+        self.__ordinate = ordinate   # colonne (col)
+
+    def get_abscissa(self) -> int:
+        return self.__abscissa
+
+    def set_abscissa(self, abscissa: int) -> None:
+        if not isinstance(abscissa, int):  # pyright: ignore[reportUnnecessaryIsInstance]
+            raise ValueError('`abscissa` must be of type `int`.')
+        self.__abscissa = abscissa
+
+    def get_ordinate(self) -> int:
+        return self.__ordinate
+
+    def set_ordinate(self, ordinate: int) -> None:
+        if not isinstance(ordinate, int):  # pyright: ignore[reportUnnecessaryIsInstance]
+            raise ValueError('`ordinate` must be of type `int`.')
+        self.__ordinate = ordinate
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Position):  # pyright: ignore[reportUnnecessaryIsInstance]
+            return NotImplemented
+        return (
+            self.__abscissa == other.__abscissa
+            and self.__ordinate == other.__ordinate
+        )
+
+    def __hash__(self) -> int:
+        return hash((self.__abscissa, self.__ordinate))
+
+    def __repr__(self) -> str:
+        return f"Position({self.__abscissa}, {self.__ordinate})"
+
+
 # ---- Type aliases ----
 
-Position = tuple[int, int]
 Action = Literal["UP", "DOWN", "LEFT", "RIGHT"]
 ActionDelta = tuple[int, int]
 QValues = dict[Action, float]
@@ -123,8 +166,8 @@ class Agent:
         return self.__qTable
 
     def setQTable(self, qTable: QTable) -> None:
-        if not isinstance(qTable, QTable):  # pyright: ignore[reportUnnecessaryIsInstance]
-            raise TypeError('`qTable` must be of type `QTable`')
+        if not isinstance(qTable, dict):  # ici on vérifie juste dict
+            raise TypeError('`qTable` must be of type `dict[Position, QValues]`')
         else:
             self.__qTable = qTable
 
@@ -198,7 +241,7 @@ class Environment:
 
         for line in maze.strip().split("\n"):
             for char in line:
-                pos: Position = (row, col)
+                pos: Position = Position(row, col)
                 self.map[pos] = char
                 if char == MAP_START:
                     self.start = pos
@@ -213,7 +256,11 @@ class Environment:
 
     def do(self, pos: Position, action: Action) -> tuple[Position, int]:
         move: ActionDelta = ACTIONS[action]
-        new_pos: Position = (pos[0] + move[0], pos[1] + move[1])
+
+        new_pos: Position = Position(
+            pos.get_abscissa() + move[0],
+            pos.get_ordinate() + move[1],
+        )
 
         reward: int
         if new_pos in self.map:
@@ -259,8 +306,8 @@ class MazeWindow(arcade.Window):
         self.history = []
 
     def pos_to_xy(self, pos: Position, sprite: arcade.Sprite) -> tuple[float, float]:
-        x: float = (pos[1] + 0.5) * sprite.width
-        y: float = (self.env.height - pos[0] - 0.5) * sprite.height
+        x: float = (pos.get_ordinate() + 0.5) * sprite.width
+        y: float = (self.env.height - pos.get_abscissa() - 0.5) * sprite.height
         return x, y
 
     def setup(self) -> None:
@@ -348,14 +395,3 @@ if __name__ == "__main__":
 
     pyplot.plot(window.history)  # type: ignore
     pyplot.show()  # type: ignore
-
-    # score = 0
-    # iterations = 0
-    #
-    # while agent.pos != env.goal:
-    #     random_action: Action = choice(list(ACTIONS.keys()))
-    #     agent.do(random_action)
-    #     score += agent.reward
-    #     iterations += 1
-    #
-    # print(iterations)
