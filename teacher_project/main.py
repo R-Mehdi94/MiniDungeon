@@ -67,23 +67,77 @@ def arg_max(table: Mapping[Action, float]) -> Action:
 
 
 class Agent:
-    env: Environment
-    pos: Position
-    iterations: int
-    score: float
-    reward: float
-    qtable: QTable
+    __environment: Environment
+    __position: Position
+    __iterationCount: int
+    __score: float
+    __reward: float
+    __qTable: QTable
+
+    def getEnvironment(self) -> Environment:
+        return self.__environment
+
+    def setEnvironment(self, environment: Environment) -> None:
+        if not isinstance(environment, Environment):  # type: ignore
+            raise TypeError('`environment` must be of type `Environment`')
+        else:
+            self.__environment = environment
+
+    def getPosition(self) -> Position:
+        return self.__position
+
+    def setPosition(self, position: Position) -> None:
+        if not isinstance(position, Position):  # pyright: ignore[reportUnnecessaryIsInstance]
+            raise TypeError('`position` must be of type `Position`')
+        else:
+            self.__position = position
+
+    def getIterationCount(self) -> int:
+        return self.__iterationCount
+
+    def setIterationCount(self, iterationCount: int) -> None:
+        if not isinstance(iterationCount, int):  # pyright: ignore[reportUnnecessaryIsInstance]
+            raise TypeError('`iterationCount` must be of type `int`')
+        else:
+            self.__iterationCount = iterationCount
+
+    def getScore(self) -> float:
+        return self.__score
+
+    def setScore(self, score: float) -> None:
+        if not isinstance(score, (int, float)):  # pyright: ignore[reportUnnecessaryIsInstance]
+            raise TypeError('`score` must be of type `float`')
+        else:
+            self.__score = float(score)
+
+    def getReward(self) -> float:
+        return self.__reward
+
+    def setReward(self, reward: float) -> None:
+        if not isinstance(reward, (int, float)):  # pyright: ignore[reportUnnecessaryIsInstance]
+            raise TypeError('`reward` must be of type `float`')
+        else:
+            self.__reward = float(reward)
+
+    def getQTable(self) -> QTable:
+        return self.__qTable
+
+    def setQTable(self, qTable: QTable) -> None:
+        if not isinstance(qTable, QTable):  # pyright: ignore[reportUnnecessaryIsInstance]
+            raise TypeError('`qTable` must be of type `QTable`')
+        else:
+            self.__qTable = qTable
 
     def __init__(self, env: "Environment") -> None:
-        self.env = env
-        self.qtable = {}
+        self.__environment = env
+        self.__qTable = {}
         self.reset()
 
     def reset(self) -> None:
-        self.pos = self.env.start
-        self.iterations = 0
-        self.score = 0.0
-        self.reward = 0.0
+        self.__position = self.__environment.start
+        self.__iterationCount = 0
+        self.__score = 0.0
+        self.__reward = 0.0
 
     def do(
         self,
@@ -91,18 +145,18 @@ class Agent:
         learning_rate: float = 1.0,
         discount_factor: float = 1.0,
     ) -> None:
-        pos, reward = self.env.do(self.pos, action)
+        pos, reward = self.__environment.do(self.__position, action)
 
-        if self.pos not in self.qtable:
-            self.qtable[self.pos] = {
+        if self.__position not in self.__qTable:
+            self.__qTable[self.__position] = {
                 ACTION_UP: 0.0,
                 ACTION_DOWN: 0.0,
                 ACTION_LEFT: 0.0,
                 ACTION_RIGHT: 0.0,
             }
 
-        if pos not in self.qtable:
-            self.qtable[pos] = {
+        if pos not in self.__qTable:
+            self.__qTable[pos] = {
                 ACTION_UP: 0.0,
                 ACTION_DOWN: 0.0,
                 ACTION_LEFT: 0.0,
@@ -110,21 +164,21 @@ class Agent:
             }
 
         # Q(s, a) += alpha * [r + gamma * max Q(s') - Q(s, a)]
-        current_q: float = self.qtable[self.pos][action]
-        best_next_q: float = max(self.qtable[pos].values())
+        current_q: float = self.__qTable[self.__position][action]
+        best_next_q: float = max(self.__qTable[pos].values())
         delta: float = learning_rate * (
             reward + discount_factor * best_next_q - current_q
         )
-        self.qtable[self.pos][action] = current_q + delta
+        self.__qTable[self.__position][action] = current_q + delta
 
-        self.pos = pos
-        self.reward = float(reward)
-        self.score += float(reward)
-        self.iterations += 1
+        self.__position = pos
+        self.__reward = float(reward)
+        self.__score += float(reward)
+        self.__iterationCount += 1
 
     def best_action(self) -> Action:
-        if self.pos in self.qtable:
-            return arg_max(self.qtable[self.pos])
+        if self.__position in self.__qTable:
+            return arg_max(self.__qTable[self.__position])
         return choice(list(ACTIONS.keys()))
 
 
@@ -188,13 +242,15 @@ class MazeWindow(arcade.Window):
     history: list[float]
 
     def __init__(self, agent: Agent) -> None:
-        width: int = int(SPRITE_SIZE * SPRITE_SCALE * agent.env.width)
-        height: int = int(SPRITE_SIZE * SPRITE_SCALE * agent.env.height)
+        width: int = int(SPRITE_SIZE * SPRITE_SCALE *
+                         agent.getEnvironment().width)
+        height: int = int(SPRITE_SIZE * SPRITE_SCALE *
+                          agent.getEnvironment().height)
         super().__init__(width, height, "Escape from ESGI")
 
         self.background_color = arcade.csscolor.BLACK
         self.agent = agent
-        self.env = agent.env
+        self.env = agent.getEnvironment()
 
         self.sprite_agent = None
         self.sprite_goal = None
@@ -212,7 +268,7 @@ class MazeWindow(arcade.Window):
             ":resources:/images/enemies/bee.png")
         self.sprite_agent = arcade.Sprite(resource_agent, SPRITE_SCALE)
         self.sprite_agent.center_x, self.sprite_agent.center_y = self.pos_to_xy(
-            self.agent.pos, self.sprite_agent
+            self.agent.getPosition(), self.sprite_agent
         )
 
         resource_goal = arcade.load_texture(
@@ -235,7 +291,7 @@ class MazeWindow(arcade.Window):
                 self.walls.append(wall_sprite)
 
         self.info = arcade.Text(
-            f"{self.agent.iterations}",
+            f"{self.agent.getIterationCount()}",
             10,
             10,
             color=arcade.csscolor.BLACK,
@@ -256,15 +312,15 @@ class MazeWindow(arcade.Window):
     def on_update(self, delta_time: float) -> bool | None:
         _ = delta_time  # unused but kept for signature compatibility
         if self.info is not None:
-            self.info.text = f"#{self.agent.iterations} Score: {self.agent.score}"
+            self.info.text = f"#{self.agent.getIterationCount()} Score: {self.agent.getScore()}"
 
-        if self.agent.pos != self.env.goal:
+        if self.agent.getPosition() != self.env.goal:
             action: Action = self.agent.best_action()
             self.agent.do(action)
 
             if self.sprite_agent is not None:
                 self.sprite_agent.center_x, self.sprite_agent.center_y = (
-                    self.pos_to_xy(self.agent.pos, self.sprite_agent)
+                    self.pos_to_xy(self.agent.getPosition(), self.sprite_agent)
                 )
         return None
 
@@ -272,7 +328,7 @@ class MazeWindow(arcade.Window):
         _ = modifiers  # unused
 
         if symbol == arcade.key.R:
-            self.history.append(self.agent.score)
+            self.history.append(self.agent.getScore())
             self.agent.reset()
         if symbol == arcade.key.Q:
             self.close()
