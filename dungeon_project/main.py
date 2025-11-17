@@ -36,6 +36,9 @@ class Monster(arcade.Sprite):
     def get_axis(self) -> MonsterAxis:
         return self.__axis
 
+    def set_axis(self, axis: MonsterAxis) -> None:
+        self.__axis = axis
+
     def get_direction(self) -> Action:
         return self.__direction
 
@@ -147,14 +150,82 @@ class CellContent(Enum):
 
 
 class Radar:
-    north: CellContent
-    north_east: CellContent
-    east: CellContent
-    south_east: CellContent
-    south: CellContent
-    south_west: CellContent
-    west: CellContent
-    north_west: CellContent
+    __north: CellContent
+    __north_east: CellContent
+    __east: CellContent
+    __south_east: CellContent
+    __south: CellContent
+    __south_west: CellContent
+    __west: CellContent
+    __north_west: CellContent
+
+    def __init__(
+        self,
+        north: CellContent,
+        north_east: CellContent,
+        east: CellContent,
+        south_east: CellContent,
+        south: CellContent,
+        south_west: CellContent,
+        west: CellContent,
+        north_west: CellContent,
+    ) -> None:
+        self.__north = north
+        self.__north_east = north_east
+        self.__east = east
+        self.__south_east = south_east
+        self.__south = south
+        self.__south_west = south_west
+        self.__west = west
+        self.__north_west = north_west
+
+    def get_north(self) -> CellContent:
+        return self.__north
+
+    def set_north(self, value: CellContent) -> None:
+        self.__north = value
+
+    def get_north_east(self) -> CellContent:
+        return self.__north_east
+
+    def set_north_east(self, value: CellContent) -> None:
+        self.__north_east = value
+
+    def get_east(self) -> CellContent:
+        return self.__east
+
+    def set_east(self, value: CellContent) -> None:
+        self.__east = value
+
+    def get_south_east(self) -> CellContent:
+        return self.__south_east
+
+    def set_south_east(self, value: CellContent) -> None:
+        self.__south_east = value
+
+    def get_south(self) -> CellContent:
+        return self.__south
+
+    def set_south(self, value: CellContent) -> None:
+        self.__south = value
+
+    def get_south_west(self) -> CellContent:
+        return self.__south_west
+
+    def set_south_west(self, value: CellContent) -> None:
+        self.__south_west = value
+
+    def get_west(self) -> CellContent:
+        return self.__west
+
+    def set_west(self, value: CellContent) -> None:
+        self.__west = value
+
+    def get_north_west(self) -> CellContent:
+        return self.__north_west
+
+    def set_north_west(self, value: CellContent) -> None:
+        self.__north_west = value
 
 
 maze_1: List[str] = [
@@ -229,6 +300,18 @@ class QTable:
         self.__table = {}
         self.__initial_quality = initial_quality
 
+    def get_table(self) -> dict[Position, ActionsQualitiesForState]:
+        return self.__table
+
+    def set_table(self, table: dict[Position, ActionsQualitiesForState]) -> None:
+        self.__table = table
+
+    def get_initial_quality(self) -> float:
+        return self.__initial_quality
+
+    def set_initial_quality(self, value: float) -> None:
+        self.__initial_quality = value
+
     def __get_or_create_state(self, position: Position) -> ActionsQualitiesForState:
         if position not in self.__table:
             self.__table[position] = ActionsQualitiesForState(self.__initial_quality)
@@ -254,6 +337,12 @@ class ActionsQualitiesForState:
         self.__qualities = {
             action: initial for action in Action
         }
+
+    def get_qualities(self) -> dict[Action, float]:
+        return self.__qualities
+
+    def set_qualities(self, qualities: dict[Action, float]) -> None:
+        self.__qualities = qualities
 
     def get(self, action: Action) -> float:
         return self.__qualities[action]
@@ -298,35 +387,84 @@ print(
 
 
 class Agent:
-    env: Environment
-    qtable: QTable
-    pos: Position
-    has_key: bool
-    score: int
-    done: bool
-    reward: int
-    iterations: int
+    __env: Environment
+    __qtable: QTable
+    __pos: Position
+    __has_key: bool
+    __score: int
+    __done: bool
+    __reward: int
+    __iterations: int
 
     def __init__(self, env: Environment) -> None:
-        self.env = env
-        self.qtable = QTable(initial_quality=0.0)
+        self.__env = env
+        self.__qtable = QTable(initial_quality=0.0)
         self.reset()
 
+    def get_env(self) -> Environment:
+        return self.__env
+
+    def set_env(self, env: Environment) -> None:
+        self.__env = env
+
+    def get_qtable(self) -> QTable:
+        return self.__qtable
+
+    def set_qtable(self, qtable: QTable) -> None:
+        self.__qtable = qtable
+
+    def get_pos(self) -> Position:
+        return self.__pos
+
+    def set_pos(self, pos: Position) -> None:
+        self.__pos = pos
+
+    def get_has_key(self) -> bool:
+        return self.__has_key
+
+    def set_has_key(self, has_key: bool) -> None:
+        self.__has_key = has_key
+
+    def get_score(self) -> int:
+        return self.__score
+
+    def set_score(self, score: int) -> None:
+        self.__score = score
+
+    def get_done(self) -> bool:
+        return self.__done
+
+    def set_done(self, done: bool) -> None:
+        self.__done = done
+
+    def get_reward(self) -> int:
+        return self.__reward
+
+    def set_reward(self, reward: int) -> None:
+        self.__reward = reward
+
+    def get_iterations(self) -> int:
+        return self.__iterations
+
+    def set_iterations(self, iterations: int) -> None:
+        self.__iterations = iterations
+
     def reset(self) -> None:
-        self.pos = self.env.start
-        self.has_key = False
-        self.score = 0
-        self.done = False
-        self.reward = 0
-        self.iterations = 0
+        self.__pos = self.__env.get_start()
+        self.__has_key = False
+        self.__score = 0
+        self.__done = False
+        self.__reward = 0
+        self.__iterations = 0
 
     def get_radar(self, pos: Position) -> dict[Action, str | None]:
         radar: dict[Action, str | None] = {}
+        env_map = self.__env.get_map()
         for action in Action:
             movement: Movement = action.to_movement()
             check_pos: Position = pos.calculate_next_position(movement)
-            if check_pos in self.env.map:
-                radar[action] = self.env.map[check_pos]
+            if check_pos in env_map:
+                radar[action] = env_map[check_pos]
             else:
                 radar[action] = None
         return radar
@@ -337,74 +475,112 @@ class Agent:
         learning_rate: float = 1.0,
         discount_factor: float = 1.0,
     ) -> None:
-        current_pos: Position = self.pos
+        current_pos: Position = self.__pos
 
-        next_pos, reward = self.env.do(current_pos, action)
+        next_pos, reward = self.__env.do(current_pos, action)
 
-        old_quality: float = self.qtable.get_quality(current_pos, action)
+        old_quality: float = self.__qtable.get_quality(current_pos, action)
 
-        best_next_action: Action = self.qtable.choose_best_action(next_pos)
-        max_next_quality: float = self.qtable.get_quality(next_pos, best_next_action)
+        best_next_action: Action = self.__qtable.choose_best_action(next_pos)
+        max_next_quality: float = self.__qtable.get_quality(next_pos, best_next_action)
 
         updated_quality: float = old_quality + learning_rate * (
             reward + discount_factor * max_next_quality - old_quality
         )
 
-        self.qtable.set_quality(current_pos, action, updated_quality)
+        self.__qtable.set_quality(current_pos, action, updated_quality)
 
-        self.pos = next_pos
-        self.reward = reward
-        self.score += reward
-        self.iterations += 1
+        self.__pos = next_pos
+        self.__reward = reward
+        self.__score += reward
+        self.__iterations += 1
 
     def choose_best_action(self) -> Action:
-        return self.qtable.choose_best_action(self.pos)
+        return self.__qtable.choose_best_action(self.__pos)
 
 
 class Environment:
-    map: dict[Position, str]
-    start: Position
-    key: Position
-    goal: Position
-    width: int
-    height: int
+    __map: dict[Position, str]
+    __start: Position
+    __key: Position | None
+    __goal: Position | None
+    __width: int
+    __height: int
 
     def __init__(self, map_layout: list[str]) -> None:
-        self.map = {}
+        self.__map = {}
         row: int
         col: int
         row, col = 0, 0
+        self.__key = None
+        self.__goal = None
 
         for line in map_layout:
             for char in line:
                 pos = Position(row, col)
-                self.map[pos] = char
+                self.__map[pos] = char
                 if char == MAP_START:
-                    self.start = pos
+                    self.__start = pos
                 elif char == MAP_KEY:
-                    self.key = pos
+                    self.__key = pos
                 elif char == MAP_GOAL:
-                    self.goal = pos
+                    self.__goal = pos
 
                 col += 1
-            self.width = col
+            self.__width = col
             row += 1
             col = 0
-        self.height = row
+        self.__height = row
+
+    def get_map(self) -> dict[Position, str]:
+        return self.__map
+
+    def set_map(self, new_map: dict[Position, str]) -> None:
+        self.__map = new_map
+
+    def get_start(self) -> Position:
+        return self.__start
+
+    def set_start(self, start: Position) -> None:
+        self.__start = start
+
+    def get_key(self) -> Position | None:
+        return self.__key
+
+    def set_key(self, key: Position | None) -> None:
+        self.__key = key
+
+    def get_goal(self) -> Position | None:
+        return self.__goal
+
+    def set_goal(self, goal: Position | None) -> None:
+        self.__goal = goal
+
+    def get_width(self) -> int:
+        return self.__width
+
+    def set_width(self, width: int) -> None:
+        self.__width = width
+
+    def get_height(self) -> int:
+        return self.__height
+
+    def set_height(self, height: int) -> None:
+        self.__height = height
 
     def do(self, pos: Position, action: Action) -> tuple[Position, int]:
         movement: Movement = action.to_movement()
         new_pos: Position = pos.calculate_next_position(movement)
 
         reward: int
-        if new_pos in self.map:
-            if self.map[new_pos] == MAP_WALL:
+        if new_pos in self.__map:
+            if self.__map[new_pos] == MAP_WALL:
                 reward = REWARD_WALL
             else:
                 pos = new_pos
-                if self.map[new_pos] == MAP_KEY:
+                if self.__map[new_pos] == MAP_KEY:
                     reward = REWARD_KEY
-                elif self.map[new_pos] == MAP_GOAL:
+                elif self.__map[new_pos] == MAP_GOAL:
                     reward = REWARD_GOAL
                 else:
                     reward = REWARD_DEFAULT
@@ -415,85 +591,178 @@ class Environment:
 
 
 class Game(arcade.Window):
-    agent: Agent
-    wall_list: arcade.SpriteList[arcade.Sprite]
-    player_list: arcade.SpriteList[arcade.Sprite]
-    key_list: arcade.SpriteList[arcade.Sprite]
-    door_list: arcade.SpriteList[arcade.Sprite]
-    monster_list: arcade.SpriteList[Monster]
-    treasure_list: arcade.SpriteList[arcade.Sprite]
-    player_sprite: arcade.Sprite
-    physics_engine: arcade.PhysicsEngineSimple
-    key_count: int
-    key_text: arcade.Text
-    player_move_timer: float
+    __agent: Agent
+    __wall_list: arcade.SpriteList[arcade.Sprite]
+    __player_list: arcade.SpriteList[arcade.Sprite]
+    __key_list: arcade.SpriteList[arcade.Sprite]
+    __door_list: arcade.SpriteList[arcade.Sprite]
+    __monster_list: arcade.SpriteList[Monster]
+    __treasure_list: arcade.SpriteList[arcade.Sprite]
+    __player_sprite: arcade.Sprite
+    __physics_engine: arcade.PhysicsEngineSimple
+    __key_count: int
+    __key_text: arcade.Text
+    __player_move_timer: float
 
-    maps: list[list[str]]
-    current_level_index: int
-    current_map: list[str]
+    __maps: list[list[str]]
+    __current_level_index: int
+    __current_map: list[str]
 
     def __init__(self, agent: Agent) -> None:
         super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
-        self.agent = agent
+        self.__agent = agent
 
-        self.maps = [maze_1, maze_2, maze_3]
-        self.current_level_index = 0
-        self.current_map = self.maps[self.current_level_index]
+        self.__maps = [maze_1, maze_2, maze_3]
+        self.__current_level_index = 0
+        self.__current_map = self.__maps[self.__current_level_index]
 
-        self.wall_list = arcade.SpriteList()
-        self.player_list = arcade.SpriteList()
-        self.key_list = arcade.SpriteList()
-        self.door_list = arcade.SpriteList()
-        self.monster_list = arcade.SpriteList()
-        self.treasure_list = arcade.SpriteList()
+        self.__wall_list = arcade.SpriteList()
+        self.__player_list = arcade.SpriteList()
+        self.__key_list = arcade.SpriteList()
+        self.__door_list = arcade.SpriteList()
+        self.__monster_list = arcade.SpriteList()
+        self.__treasure_list = arcade.SpriteList()
 
-        self.player_sprite = arcade.Sprite(
+        self.__player_sprite = arcade.Sprite(
             ':resources:images/tiles/boxCrate_double.png',
             GLOBAL_SCALING,
         )
-        self.physics_engine = arcade.PhysicsEngineSimple(
-            self.player_sprite,
+        self.__physics_engine = arcade.PhysicsEngineSimple(
+            self.__player_sprite,
             [],
         )
-        self.key_count = 0
-        self.key_text = arcade.Text(
-            f'Clés : {self.key_count}',
+        self.__key_count = 0
+        self.__key_text = arcade.Text(
+            f'Clés : {self.__key_count}',
             10,
             10,
             arcade.color.WHITE,
             18,
         )
 
-        self.player_move_timer = 0.0
+        self.__player_move_timer = 0.0
 
         arcade.set_background_color(arcade.color.DARK_BROWN)
 
+    def get_agent(self) -> Agent:
+        return self.__agent
+
+    def set_agent(self, agent: Agent) -> None:
+        self.__agent = agent
+
+    def get_wall_list(self) -> arcade.SpriteList[arcade.Sprite]:
+        return self.__wall_list
+
+    def set_wall_list(self, wall_list: arcade.SpriteList[arcade.Sprite]) -> None:
+        self.__wall_list = wall_list
+
+    def get_player_list(self) -> arcade.SpriteList[arcade.Sprite]:
+        return self.__player_list
+
+    def set_player_list(self, player_list: arcade.SpriteList[arcade.Sprite]) -> None:
+        self.__player_list = player_list
+
+    def get_key_list(self) -> arcade.SpriteList[arcade.Sprite]:
+        return self.__key_list
+
+    def set_key_list(self, key_list: arcade.SpriteList[arcade.Sprite]) -> None:
+        self.__key_list = key_list
+
+    def get_door_list(self) -> arcade.SpriteList[arcade.Sprite]:
+        return self.__door_list
+
+    def set_door_list(self, door_list: arcade.SpriteList[arcade.Sprite]) -> None:
+        self.__door_list = door_list
+
+    def get_monster_list(self) -> arcade.SpriteList[Monster]:
+        return self.__monster_list
+
+    def set_monster_list(self, monster_list: arcade.SpriteList[Monster]) -> None:
+        self.__monster_list = monster_list
+
+    def get_treasure_list(self) -> arcade.SpriteList[arcade.Sprite]:
+        return self.__treasure_list
+
+    def set_treasure_list(self, treasure_list: arcade.SpriteList[arcade.Sprite]) -> None:
+        self.__treasure_list = treasure_list
+
+    def get_player_sprite(self) -> arcade.Sprite:
+        return self.__player_sprite
+
+    def set_player_sprite(self, sprite: arcade.Sprite) -> None:
+        self.__player_sprite = sprite
+
+    def get_physics_engine(self) -> arcade.PhysicsEngineSimple:
+        return self.__physics_engine
+
+    def set_physics_engine(self, engine: arcade.PhysicsEngineSimple) -> None:
+        self.__physics_engine = engine
+
+    def get_key_count(self) -> int:
+        return self.__key_count
+
+    def set_key_count(self, count: int) -> None:
+        self.__key_count = count
+
+    def get_key_text(self) -> arcade.Text:
+        return self.__key_text
+
+    def set_key_text(self, text: arcade.Text) -> None:
+        self.__key_text = text
+
+    def get_player_move_timer(self) -> float:
+        return self.__player_move_timer
+
+    def set_player_move_timer(self, value: float) -> None:
+        self.__player_move_timer = value
+
+    def get_maps(self) -> list[list[str]]:
+        return self.__maps
+
+    def set_maps(self, maps: list[list[str]]) -> None:
+        self.__maps = maps
+
+    def get_current_level_index(self) -> int:
+        return self.__current_level_index
+
+    def set_current_level_index(self, index: int) -> None:
+        self.__current_level_index = index
+
+    def get_current_map(self) -> list[str]:
+        return self.__current_map
+
+    def set_current_map(self, current_map: list[str]) -> None:
+        self.__current_map = current_map
+
     def setup(self) -> None:
         print('\n=== LEVEL LOADING ===')
-        self.key_count = 0
-        self.key_text = arcade.Text(
-            f'Keys: {self.key_count}',
+        self.__key_count = 0
+        self.__key_text = arcade.Text(
+            f'Keys: {self.__key_count}',
             10,
             10,
             arcade.color.WHITE,
             18,
         )
 
-        self.player_list = arcade.SpriteList()
-        self.wall_list = arcade.SpriteList()
-        self.key_list = arcade.SpriteList()
-        self.door_list = arcade.SpriteList()
-        self.monster_list = arcade.SpriteList()
-        self.treasure_list = arcade.SpriteList()
+        self.__player_list = arcade.SpriteList()
+        self.__wall_list = arcade.SpriteList()
+        self.__key_list = arcade.SpriteList()
+        self.__door_list = arcade.SpriteList()
+        self.__monster_list = arcade.SpriteList()
+        self.__treasure_list = arcade.SpriteList()
 
-        self.player_move_timer = 0.0
+        self.__player_move_timer = 0.0
 
         player_found: bool = False
 
-        for row_index, row in enumerate(self.current_map):
+        for row_index, row in enumerate(self.__current_map):
             for col_index, char in enumerate(row):
                 x: float = (col_index * TILE_PIXEL_SIZE + TILE_PIXEL_SIZE / 2)
-                y: float = ((MAP_HEIGHT_TILES - 1 - row_index) * TILE_PIXEL_SIZE + TILE_PIXEL_SIZE / 2)
+                y: float = (
+                    (MAP_HEIGHT_TILES - 1 - row_index) * TILE_PIXEL_SIZE
+                    + TILE_PIXEL_SIZE / 2
+                )
 
                 if char == '#':
                     wall = arcade.Sprite(
@@ -502,17 +771,17 @@ class Game(arcade.Window):
                     )
                     wall.center_x = x
                     wall.center_y = y
-                    self.wall_list.append(wall)
+                    self.__wall_list.append(wall)
 
                 elif char == 'P':
-                    self.player_sprite = arcade.Sprite(
+                    self.__player_sprite = arcade.Sprite(
                         ':resources:images/animated_characters/'
                         'female_person/femalePerson_idle.png',
                         GLOBAL_SCALING,
                     )
-                    self.player_sprite.center_x = x
-                    self.player_sprite.center_y = y
-                    self.player_list.append(self.player_sprite)
+                    self.__player_sprite.center_x = x
+                    self.__player_sprite.center_y = y
+                    self.__player_list.append(self.__player_sprite)
                     player_found = True
                     print(f'PLAYER STARTING POSITION: ({x:.0f}, {y:.0f})')
 
@@ -523,7 +792,7 @@ class Game(arcade.Window):
                     )
                     key.center_x = x
                     key.center_y = y
-                    self.key_list.append(key)
+                    self.__key_list.append(key)
 
                 elif char == 'D':
                     door = arcade.Sprite(
@@ -532,7 +801,7 @@ class Game(arcade.Window):
                     )
                     door.center_x = x
                     door.center_y = y
-                    self.door_list.append(door)
+                    self.__door_list.append(door)
 
                 elif char == 'M':
                     monster = Monster(
@@ -542,7 +811,7 @@ class Game(arcade.Window):
                     )
                     monster.center_x = x
                     monster.center_y = y
-                    self.monster_list.append(monster)
+                    self.__monster_list.append(monster)
 
                 elif char == 'T':
                     treasure = arcade.Sprite(
@@ -551,31 +820,31 @@ class Game(arcade.Window):
                     )
                     treasure.center_x = x
                     treasure.center_y = y
-                    self.treasure_list.append(treasure)
+                    self.__treasure_list.append(treasure)
 
         if not player_found:
             print(' ERROR: PLAYER NOT FOUND!')
             return
 
-        self.physics_engine = arcade.PhysicsEngineSimple(
-            self.player_sprite,
-            [self.wall_list, self.door_list],
+        self.__physics_engine = arcade.PhysicsEngineSimple(
+            self.__player_sprite,
+            [self.__wall_list, self.__door_list],
         )
 
         print(
-            f' {len(self.wall_list)} walls, {len(self.key_list)} keys, '
-            f'{len(self.monster_list)} monsters, {len(self.door_list)} doors'
+            f' {len(self.__wall_list)} walls, {len(self.__key_list)} keys, '
+            f'{len(self.__monster_list)} monsters, {len(self.__door_list)} doors'
         )
 
     def on_draw(self) -> None:
         self.clear()
-        self.wall_list.draw()
-        self.door_list.draw()
-        self.key_list.draw()
-        self.monster_list.draw()
-        self.treasure_list.draw()
-        self.player_list.draw()
-        self.key_text.draw()
+        self.__wall_list.draw()
+        self.__door_list.draw()
+        self.__key_list.draw()
+        self.__monster_list.draw()
+        self.__treasure_list.draw()
+        self.__player_list.draw()
+        self.__key_text.draw()
 
     def on_key_press(self, symbol: int, modifiers: int) -> None:
         pass
@@ -584,68 +853,68 @@ class Game(arcade.Window):
         pass
 
     def on_update(self, delta_time: float) -> None:
-        self.player_move_timer -= delta_time
+        self.__player_move_timer -= delta_time
 
-        if self.player_move_timer <= 0:
-            self.player_move_timer = random.uniform(0.1, 0.4)
+        if self.__player_move_timer <= 0:
+            self.__player_move_timer = random.uniform(0.1, 0.4)
 
             direction: Action = choice(list(Action))
 
             if direction is Action.UP:
-                self.player_sprite.change_y = PLAYER_MOVEMENT_SPEED
-                self.player_sprite.change_x = 0
+                self.__player_sprite.change_y = PLAYER_MOVEMENT_SPEED
+                self.__player_sprite.change_x = 0
             elif direction is Action.DOWN:
-                self.player_sprite.change_y = -PLAYER_MOVEMENT_SPEED
-                self.player_sprite.change_x = 0
+                self.__player_sprite.change_y = -PLAYER_MOVEMENT_SPEED
+                self.__player_sprite.change_x = 0
             elif direction is Action.LEFT:
-                self.player_sprite.change_x = -PLAYER_MOVEMENT_SPEED
-                self.player_sprite.change_y = 0
+                self.__player_sprite.change_x = -PLAYER_MOVEMENT_SPEED
+                self.__player_sprite.change_y = 0
             elif direction is Action.RIGHT:
-                self.player_sprite.change_x = PLAYER_MOVEMENT_SPEED
-                self.player_sprite.change_y = 0
+                self.__player_sprite.change_x = PLAYER_MOVEMENT_SPEED
+                self.__player_sprite.change_y = 0
 
-        self.physics_engine.update()
+        self.__physics_engine.update()
         self.update_monsters()
 
         key_hit_list = arcade.check_for_collision_with_list(
-            self.player_sprite,
-            self.key_list,
+            self.__player_sprite,
+            self.__key_list,
         )
         for key in key_hit_list:
             key.remove_from_sprite_lists()
-            self.key_count += 1
-            self.key_text.text = f'KEY: {self.key_count}'
-            print(f'KEY COLLECTED! TOTAL: {self.key_count}')
+            self.__key_count += 1
+            self.__key_text.text = f'KEY: {self.__key_count}'
+            print(f'KEY COLLECTED! TOTAL: {self.__key_count}')
 
-        for door in self.door_list:
+        for door in self.__door_list:
             distance: float = arcade.get_distance_between_sprites(
-                self.player_sprite,
+                self.__player_sprite,
                 door,
             )
-            if distance < 47 and self.key_count > 0:
+            if distance < 47 and self.__key_count > 0:
                 print('DOOR REACHED WITH A KEY -> NEXT LEVEL')
-                self.key_count -= 1
+                self.__key_count -= 1
                 self.go_to_next_level()
                 return
 
         monster_hit_list = arcade.check_for_collision_with_list(
-            self.player_sprite,
-            self.monster_list,
+            self.__player_sprite,
+            self.__monster_list,
         )
         if len(monster_hit_list) > 0:
             print('GAME OVER')
             self.setup()
 
         treasure_hit_list = arcade.check_for_collision_with_list(
-            self.player_sprite,
-            self.treasure_list,
+            self.__player_sprite,
+            self.__treasure_list,
         )
         if len(treasure_hit_list) > 0:
             print('VICTORY YOU HAVE FOUND THE TREASURE!')
             arcade.exit()
 
     def update_monsters(self) -> None:
-        for monster in self.monster_list:
+        for monster in self.__monster_list:
             dx: float = 0.0
             dy: float = 0.0
             direction: Action = monster.get_direction()
@@ -664,11 +933,11 @@ class Game(arcade.Window):
 
             collided_with_wall = arcade.check_for_collision_with_list(
                 monster,
-                self.wall_list,
+                self.__wall_list,
             )
             collided_with_door = arcade.check_for_collision_with_list(
                 monster,
-                self.door_list,
+                self.__door_list,
             )
 
             if collided_with_wall or collided_with_door:
@@ -677,17 +946,18 @@ class Game(arcade.Window):
                 monster.reverse_direction()
 
     def go_to_next_level(self) -> None:
-        self.current_level_index += 1
+        self.__current_level_index += 1
 
-        if self.current_level_index >= len(self.maps):
+        if self.__current_level_index >= len(self.__maps):
             print('NO MORE LEVELS, EXITING')
             arcade.exit()
             return
 
-        self.current_map = self.maps[self.current_level_index]
+        self.__current_map = self.__maps[self.__current_level_index]
 
-        self.agent.env = Environment(self.current_map)
-        self.agent.reset()
+        new_env = Environment(self.__current_map)
+        self.__agent.set_env(new_env)
+        self.__agent.reset()
 
         self.setup()
 
