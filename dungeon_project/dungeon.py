@@ -3,7 +3,7 @@ from __future__ import annotations
 import arcade
 import random
 from random import choice
-from typing import List, TypeAlias
+from typing import List
 from collections.abc import Mapping
 from enum import Enum
 
@@ -225,7 +225,6 @@ class Agent:
 
     def __init__(self, env: Environment) -> None:
         self.env = env
-        # Q-table métier, plus un dict brut
         self.qtable = QTable(initial_quality=0.0)
         self.reset()
 
@@ -245,7 +244,7 @@ class Agent:
             if check_pos in self.env.map:
                 radar[action] = self.env.map[check_pos]
             else:
-                radar[action] = None  # en dehors de la map
+                radar[action] = None
         return radar
 
     def do(
@@ -373,13 +372,12 @@ class Game(arcade.Window):
             18,
         )
 
-        # Minuteur pour le mouvement aléatoire du joueur
         self.player_move_timer = 0.0
 
         arcade.set_background_color(arcade.color.DARK_BROWN)
 
     def setup(self) -> None:
-        print('\n=== LEVEL LOADING... ===')
+        print('\n=== LEVEL LOADING ===')
         self.key_count = 0
         self.key_text = arcade.Text(
             f'Keys: {self.key_count}',
