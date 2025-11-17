@@ -4,7 +4,6 @@ import arcade
 import random
 from random import choice
 from typing import List
-from collections.abc import Mapping
 from enum import Enum
 
 
