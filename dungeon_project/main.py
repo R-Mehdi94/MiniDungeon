@@ -967,10 +967,6 @@ class Game(arcade.Window):
                 f'GAME OVER - SCORE: {self.__score} - '
                 f'ACTIONS: {self.__action_count}'
             )
-            self.__score = 0
-            self.__action_count = 0
-            self.__score_text.text = f'Score: {self.__score}'
-            self.__actions_text.text = f'Actions: {self.__action_count}'
             self.setup()
 
         treasure_hit_list = arcade.check_for_collision_with_list(
