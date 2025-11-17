@@ -164,12 +164,54 @@ maze_1: List[str] = [
     '#       ##########                     #',
     '#       #        #                     #',
     '#         M         #####              #',
-    '#                        T             #',
+    '#                                      #',
     '##########        D                    #',
     '#     M                       M        #',
     '#           #####   #                  #',
     '#                   ######             #',
     '#   M                         K        #',
+    '#         #                            #',
+    '#         ############                 #',
+    '#         #                 M          #',
+    '#         #                            #',
+    '#         #                            #',
+    '########################################',
+]
+
+maze_2: List[str] = [
+    '########################################',
+    '# P                         M         #',
+    '#                                      #',
+    '#       ##########                     #',
+    '#       #        #                     #',
+    '#             K     #####              #',
+    '#                                      #',
+    '##########                    D        #',
+    '#     M                                #',
+    '#           #####   #                  #',
+    '#                   ######             #',
+    '#                                M     #',
+    '#         #                            #',
+    '#         ############                 #',
+    '#         #                            #',
+    '#         #                            #',
+    '#         #                            #',
+    '########################################',
+]
+
+maze_3: List[str] = [
+    '########################################',
+    '# P                                    #',
+    '#                                      #',
+    '#       ##########                     #',
+    '#       #        #                     #',
+    '#         M         #####              #',
+    '#                        T             #',
+    '##########                             #',
+    '#     M                                #',
+    '#           #####   #                  #',
+    '#                   ######             #',
+    '#   M                                  #',
     '#         #                            #',
     '#         ############                 #',
     '#         #                 M          #',
@@ -386,9 +428,17 @@ class Game(arcade.Window):
     key_text: arcade.Text
     player_move_timer: float
 
+    maps: list[list[str]]
+    current_level_index: int
+    current_map: list[str]
+
     def __init__(self, agent: Agent) -> None:
         super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
         self.agent = agent
+
+        self.maps = [maze_1, maze_2, maze_3]
+        self.current_level_index = 0
+        self.current_map = self.maps[self.current_level_index]
 
         self.wall_list = arcade.SpriteList()
         self.player_list = arcade.SpriteList()
@@ -440,7 +490,7 @@ class Game(arcade.Window):
 
         player_found: bool = False
 
-        for row_index, row in enumerate(maze_1):
+        for row_index, row in enumerate(self.current_map):
             for col_index, char in enumerate(row):
                 x: float = (col_index * TILE_PIXEL_SIZE + TILE_PIXEL_SIZE / 2)
                 y: float = ((MAP_HEIGHT_TILES - 1 - row_index) * TILE_PIXEL_SIZE + TILE_PIXEL_SIZE / 2)
@@ -573,17 +623,10 @@ class Game(arcade.Window):
                 door,
             )
             if distance < 47 and self.key_count > 0:
-                door.remove_from_sprite_lists()
+                print('DOOR REACHED WITH A KEY -> NEXT LEVEL')
                 self.key_count -= 1
-                self.key_text.text = f'KEYS: {self.key_count}'
-                print(
-                    f'DOOR OPEN! KEYS REMAINING: {self.key_count}'
-                )
-                self.physics_engine = arcade.PhysicsEngineSimple(
-                    self.player_sprite,
-                    [self.wall_list, self.door_list],
-                )
-                break
+                self.go_to_next_level()
+                return
 
         monster_hit_list = arcade.check_for_collision_with_list(
             self.player_sprite,
@@ -632,6 +675,21 @@ class Game(arcade.Window):
                 monster.center_x -= dx
                 monster.center_y -= dy
                 monster.reverse_direction()
+
+    def go_to_next_level(self) -> None:
+        self.current_level_index += 1
+
+        if self.current_level_index >= len(self.maps):
+            print('NO MORE LEVELS, EXITING')
+            arcade.exit()
+            return
+
+        self.current_map = self.maps[self.current_level_index]
+
+        self.agent.env = Environment(self.current_map)
+        self.agent.reset()
+
+        self.setup()
 
 
 def main() -> None:
