@@ -209,10 +209,6 @@ print(
 )
 
 
-def choose_best_action(table: Mapping[Action, float]) -> Action:
-    return max(table, key=lambda action: table[action])
-
-
 class Agent:
     env: Environment
     qtable: QTable
