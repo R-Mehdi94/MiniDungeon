@@ -4,7 +4,7 @@ import arcade
 import random
 from random import choice
 from typing import List
-from enum import Enum
+from enum import Enum, IntEnum
 
 
 class MonsterAxis(Enum):
@@ -360,11 +360,15 @@ MAP_GOAL: str = 'T'
 MAP_START: str = 'P'
 MAP_KEY: str = 'K'
 
-REWARD_WALL: int = -10
-REWARD_DEFAULT: int = -1
-REWARD_KEY: int = 10
-REWARD_GOAL: int = 1000
-REWARD_OUT: int = -10
+
+class Reward(IntEnum):
+    STEP = -1
+    WALL = -10
+    OUT_OF_MAP = -10
+    KEY = 10
+    MONSTER = -100
+    GOAL = 1000
+
 
 TEXTURE_SIZE: int = 128
 TILE_PIXEL_SIZE: int = 32
@@ -575,17 +579,17 @@ class Environment:
         reward: int
         if new_pos in self.__map:
             if self.__map[new_pos] == MAP_WALL:
-                reward = REWARD_WALL
+                reward = Reward.WALL
             else:
                 pos = new_pos
                 if self.__map[new_pos] == MAP_KEY:
-                    reward = REWARD_KEY
+                    reward = Reward.KEY
                 elif self.__map[new_pos] == MAP_GOAL:
-                    reward = REWARD_GOAL
+                    reward = Reward.GOAL
                 else:
-                    reward = REWARD_DEFAULT
+                    reward = Reward.STEP
         else:
-            reward = REWARD_OUT
+            reward = Reward.OUT_OF_MAP
 
         return pos, reward
 
@@ -603,6 +607,11 @@ class Game(arcade.Window):
     __key_count: int
     __key_text: arcade.Text
     __player_move_timer: float
+
+    __score: int
+    __score_text: arcade.Text
+    __action_count: int
+    __actions_text: arcade.Text
 
     __maps: list[list[str]]
     __current_level_index: int
@@ -633,9 +642,26 @@ class Game(arcade.Window):
         )
         self.__key_count = 0
         self.__key_text = arcade.Text(
-            f'Clés : {self.__key_count}',
+            f'Keys: {self.__key_count}',
             10,
             10,
+            arcade.color.WHITE,
+            18,
+        )
+
+        self.__score = 0
+        self.__action_count = 0
+        self.__score_text = arcade.Text(
+            f'Score: {self.__score}',
+            10,
+            40,
+            arcade.color.WHITE,
+            18,
+        )
+        self.__actions_text = arcade.Text(
+            f'Actions: {self.__action_count}',
+            10,
+            70,
             arcade.color.WHITE,
             18,
         )
@@ -734,11 +760,35 @@ class Game(arcade.Window):
     def set_current_map(self, current_map: list[str]) -> None:
         self.__current_map = current_map
 
+    def get_score(self) -> int:
+        return self.__score
+
+    def set_score(self, score: int) -> None:
+        self.__score = score
+
+    def get_action_count(self) -> int:
+        return self.__action_count
+
+    def set_action_count(self, count: int) -> None:
+        self.__action_count = count
+
+    def get_score_text(self) -> arcade.Text:
+        return self.__score_text
+
+    def set_score_text(self, text: arcade.Text) -> None:
+        self.__score_text = text
+
+    def get_actions_text(self) -> arcade.Text:
+        return self.__actions_text
+
+    def set_actions_text(self, text: arcade.Text) -> None:
+        self.__actions_text = text
+
     def setup(self) -> None:
         print('\n=== LEVEL LOADING ===')
         self.__key_count = 0
         self.__key_text = arcade.Text(
-            f'Keys: {self.__key_count}',
+            f'Clés: {self.__key_count}',
             10,
             10,
             arcade.color.WHITE,
@@ -845,6 +895,8 @@ class Game(arcade.Window):
         self.__treasure_list.draw()
         self.__player_list.draw()
         self.__key_text.draw()
+        self.__score_text.draw()
+        self.__actions_text.draw()
 
     def on_key_press(self, symbol: int, modifiers: int) -> None:
         pass
@@ -859,6 +911,11 @@ class Game(arcade.Window):
             self.__player_move_timer = random.uniform(0.1, 0.4)
 
             direction: Action = choice(list(Action))
+
+            self.__action_count += 1
+            self.__score += Reward.STEP
+            self.__score_text.text = f'Score: {self.__score}'
+            self.__actions_text.text = f'Actions: {self.__action_count}'
 
             if direction is Action.UP:
                 self.__player_sprite.change_y = PLAYER_MOVEMENT_SPEED
@@ -883,7 +940,9 @@ class Game(arcade.Window):
         for key in key_hit_list:
             key.remove_from_sprite_lists()
             self.__key_count += 1
-            self.__key_text.text = f'KEY: {self.__key_count}'
+            self.__score += Reward.KEY
+            self.__key_text.text = f'Keys: {self.__key_count}'
+            self.__score_text.text = f'Score: {self.__score}'
             print(f'KEY COLLECTED! TOTAL: {self.__key_count}')
 
         for door in self.__door_list:
@@ -902,7 +961,16 @@ class Game(arcade.Window):
             self.__monster_list,
         )
         if len(monster_hit_list) > 0:
-            print('GAME OVER')
+            self.__score += Reward.MONSTER
+            self.__score_text.text = f'Score: {self.__score}'
+            print(
+                f'GAME OVER - SCORE: {self.__score} - '
+                f'ACTIONS: {self.__action_count}'
+            )
+            self.__score = 0
+            self.__action_count = 0
+            self.__score_text.text = f'Score: {self.__score}'
+            self.__actions_text.text = f'Actions: {self.__action_count}'
             self.setup()
 
         treasure_hit_list = arcade.check_for_collision_with_list(
@@ -910,7 +978,13 @@ class Game(arcade.Window):
             self.__treasure_list,
         )
         if len(treasure_hit_list) > 0:
-            print('VICTORY YOU HAVE FOUND THE TREASURE!')
+            self.__score += Reward.GOAL
+            self.__score_text.text = f'Score: {self.__score}'
+            print(
+                'VICTORY YOU HAVE FOUND THE TREASURE!\n'
+                f'FINAL SCORE: {self.__score} - '
+                f'ACTIONS: {self.__action_count}'
+            )
             arcade.exit()
 
     def update_monsters(self) -> None:
@@ -949,7 +1023,11 @@ class Game(arcade.Window):
         self.__current_level_index += 1
 
         if self.__current_level_index >= len(self.__maps):
-            print('NO MORE LEVELS, EXITING')
+            print(
+                'NO MORE LEVELS, EXITING\n'
+                f'FINAL SCORE: {self.__score} - '
+                f'ACTIONS: {self.__action_count}'
+            )
             arcade.exit()
             return
 
