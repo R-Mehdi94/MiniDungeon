@@ -38,7 +38,7 @@ class Position:
         return hash((self.__row, self.__column))
 
     def __repr__(self) -> str:
-        return f"Position({self.__row}, {self.__column})"
+        return f'Position({self.__row}, {self.__column})'
 
 
 class Movement:
@@ -65,7 +65,7 @@ class Movement:
         return (self.__row, self.__column)
 
     def __repr__(self) -> str:
-        return f"Movement(row={self.__row}, column={self.__column})"
+        return f'Movement(row={self.__row}, column={self.__column})'
 
 
 class Action(Enum):
@@ -79,17 +79,42 @@ class Action(Enum):
         return Movement(row_delta, col_delta)
 
 
-# Aliases optionnels si on veut des constantes plus parlantes
-ACTION_UP: Action = Action.UP
-ACTION_DOWN: Action = Action.DOWN
-ACTION_LEFT: Action = Action.LEFT
-ACTION_RIGHT: Action = Action.RIGHT
+class CardinalDirection(Enum):
+    NORTH = 'NORTH'
+    NORTH_EAST = 'NORTH EAST'
+    EAST = 'EAST'
+    SOUTH_EAST = 'SOUTH EAST'
+    SOUTH = 'SOUTH'
+    SOUTH_WEST = 'SOUTH WEST'
+    WEST = 'WEST'
+    NORTH_WEST = 'NORTH WEST'
+
+
+class CellContent(Enum):
+    WALL = '#'
+    EMPTY = ' '
+    START = 'P'
+    KEY = 'K'
+    DOOR = 'D'
+    MONSTER = 'M'
+    TREASURE = 'T'
+    OUT_OF_MAP = None
+
+
+class Radar:
+    north: CellContent
+    north_east: CellContent
+    east: CellContent
+    south_east: CellContent
+    south: CellContent
+    south_west: CellContent
+    west: CellContent
+    north_west: CellContent
 
 
 maze_1: List[str] = [
     '########################################',
     '# P                                    #',
-    '#                                      #',
     '#                                      #',
     '#       ##########                     #',
     '#       #        #                     #',
@@ -111,6 +136,25 @@ maze_1: List[str] = [
 QValues: TypeAlias = dict[Action, float]
 QTable: TypeAlias = dict[Position, QValues]
 
+
+class ActionsQualitiesForState:
+    __qualities: dict[Action, float]
+
+    def __init__(self, initial: float = 0.0) -> None:
+        self.__qualities = {
+            action: initial for action in Action
+        }
+
+    def get(self, action: Action) -> float:
+        return self.__qualities[action]
+
+    def set(self, action: Action, quality: float) -> None:
+        self.__qualities[action] = quality
+
+    def choose_best_action(self) -> Action:
+        return max(self.__qualities, key=lambda action: self.__qualities[action])
+
+
 BASE_TILE_SIZE: int = 128
 MAP_WALL: str = '#'
 MAP_GOAL: str = 'T'
@@ -127,11 +171,6 @@ TEXTURE_SIZE: int = 128
 TILE_PIXEL_SIZE: int = 32
 
 GLOBAL_SCALING: float = TILE_PIXEL_SIZE / TEXTURE_SIZE
-
-CHARACTER_SCALING: float = GLOBAL_SCALING
-TILE_SCALING: float = GLOBAL_SCALING
-ITEM_SCALING: float = GLOBAL_SCALING
-DOOR_SCALING: float = GLOBAL_SCALING
 
 MAP_HEIGHT_TILES: int = len(maze_1)
 MAP_WIDTH_TILES: int = len(maze_1[0])
@@ -306,7 +345,7 @@ class Game(arcade.Window):
 
         self.player_sprite = arcade.Sprite(
             ':resources:images/tiles/boxCrate_double.png',
-            TILE_SCALING,
+            GLOBAL_SCALING,
         )
         self.physics_engine = arcade.PhysicsEngineSimple(
             self.player_sprite,
@@ -344,25 +383,19 @@ class Game(arcade.Window):
         self.monster_list = arcade.SpriteList()
         self.treasure_list = arcade.SpriteList()
 
-        # Réinitialise le minuteur de mouvement
         self.player_move_timer = 0.0
 
         player_found: bool = False
 
         for row_index, row in enumerate(maze_1):
             for col_index, char in enumerate(row):
-                x: float = (
-                    col_index * TILE_PIXEL_SIZE + TILE_PIXEL_SIZE / 2
-                )
-                y: float = (
-                    (MAP_HEIGHT_TILES - 1 - row_index) * TILE_PIXEL_SIZE
-                    + TILE_PIXEL_SIZE / 2
-                )
+                x: float = (col_index * TILE_PIXEL_SIZE + TILE_PIXEL_SIZE / 2)
+                y: float = ((MAP_HEIGHT_TILES - 1 - row_index) * TILE_PIXEL_SIZE + TILE_PIXEL_SIZE / 2)
 
                 if char == '#':
                     wall = arcade.Sprite(
                         ':resources:images/tiles/grassCenter.png',
-                        TILE_SCALING,
+                        GLOBAL_SCALING,
                     )
                     wall.center_x = x
                     wall.center_y = y
@@ -372,7 +405,7 @@ class Game(arcade.Window):
                     self.player_sprite = arcade.Sprite(
                         ':resources:images/animated_characters/'
                         'female_person/femalePerson_idle.png',
-                        CHARACTER_SCALING,
+                        GLOBAL_SCALING,
                     )
                     self.player_sprite.center_x = x
                     self.player_sprite.center_y = y
@@ -383,7 +416,7 @@ class Game(arcade.Window):
                 elif char == 'K':
                     key = arcade.Sprite(
                         ':resources:images/items/keyYellow.png',
-                        ITEM_SCALING,
+                        GLOBAL_SCALING,
                     )
                     key.center_x = x
                     key.center_y = y
@@ -392,7 +425,7 @@ class Game(arcade.Window):
                 elif char == 'D':
                     door = arcade.Sprite(
                         ':resources:images/tiles/doorClosed_mid.png',
-                        DOOR_SCALING,
+                        GLOBAL_SCALING,
                     )
                     door.center_x = x
                     door.center_y = y
@@ -402,7 +435,7 @@ class Game(arcade.Window):
                     monster = arcade.Sprite(
                         ':resources:images/animated_characters/'
                         'zombie/zombie_idle.png',
-                        CHARACTER_SCALING,
+                        GLOBAL_SCALING,
                     )
                     monster.center_x = x
                     monster.center_y = y
@@ -411,7 +444,7 @@ class Game(arcade.Window):
                 elif char == 'T':
                     treasure = arcade.Sprite(
                         ':resources:images/items/gemBlue.png',
-                        ITEM_SCALING,
+                        GLOBAL_SCALING,
                     )
                     treasure.center_x = x
                     treasure.center_y = y
@@ -451,7 +484,6 @@ class Game(arcade.Window):
         self.player_move_timer -= delta_time
 
         if self.player_move_timer <= 0:
-            # Choisit une nouvelle durée aléatoire
             self.player_move_timer = random.uniform(0.1, 0.4)
 
             direction: Action = choice(list(Action))
