@@ -133,8 +133,31 @@ maze_1: List[str] = [
     '########################################',
 ]
 
-QValues: TypeAlias = dict[Action, float]
-QTable: TypeAlias = dict[Position, QValues]
+
+class QTable:
+    __table: dict[Position, ActionsQualitiesForState]
+    __initial_quality: float
+
+    def __init__(self, initial_quality: float = 0.0) -> None:
+        self.__table = {}
+        self.__initial_quality = initial_quality
+
+    def __get_or_create_state(self, position: Position) -> ActionsQualitiesForState:
+        if position not in self.__table:
+            self.__table[position] = ActionsQualitiesForState(self.__initial_quality)
+        return self.__table[position]
+
+    def get_quality(self, position: Position, action: Action) -> float:
+        return self.__get_or_create_state(position).get(action)
+
+    def set_quality(self, position: Position, action: Action, quality: float) -> None:
+        self.__get_or_create_state(position).set(action, quality)
+
+    def choose_best_action(self, position: Position) -> Action:
+        return self.__get_or_create_state(position).choose_best_action()
+
+    def get_state_qualities(self, position: Position) -> ActionsQualitiesForState:
+        return self.__get_or_create_state(position)
 
 
 class ActionsQualitiesForState:
@@ -202,7 +225,8 @@ class Agent:
 
     def __init__(self, env: Environment) -> None:
         self.env = env
-        self.qtable = {}
+        # Q-table métier, plus un dict brut
+        self.qtable = QTable(initial_quality=0.0)
         self.reset()
 
     def reset(self) -> None:
@@ -230,39 +254,28 @@ class Agent:
         learning_rate: float = 1.0,
         discount_factor: float = 1.0,
     ) -> None:
-        pos, reward = self.env.do(self.pos, action)
+        current_pos: Position = self.pos
 
-        if self.pos not in self.qtable:
-            self.qtable[self.pos] = {
-                Action.UP: 0.0,
-                Action.DOWN: 0.0,
-                Action.LEFT: 0.0,
-                Action.RIGHT: 0.0,
-            }
-        if pos not in self.qtable:
-            self.qtable[pos] = {
-                Action.UP: 0.0,
-                Action.DOWN: 0.0,
-                Action.LEFT: 0.0,
-                Action.RIGHT: 0.0,
-            }
+        next_pos, reward = self.env.do(current_pos, action)
 
-        delta: float = learning_rate * (
-            reward
-            + discount_factor * max(self.qtable[pos].values())
-            - self.qtable[self.pos][action]
+        old_quality: float = self.qtable.get_quality(current_pos, action)
+
+        best_next_action: Action = self.qtable.choose_best_action(next_pos)
+        max_next_quality: float = self.qtable.get_quality(next_pos, best_next_action)
+
+        updated_quality: float = old_quality + learning_rate * (
+            reward + discount_factor * max_next_quality - old_quality
         )
-        self.qtable[self.pos][action] += delta
 
-        self.pos = pos
+        self.qtable.set_quality(current_pos, action, updated_quality)
+
+        self.pos = next_pos
         self.reward = reward
         self.score += reward
         self.iterations += 1
 
-    def best_action(self) -> Action:
-        if self.pos in self.qtable:
-            return choose_best_action(self.qtable[self.pos])
-        return choice(list(Action))
+    def choose_best_action(self) -> Action:
+        return self.qtable.choose_best_action(self.pos)
 
 
 class Environment:
