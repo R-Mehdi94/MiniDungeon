@@ -144,6 +144,14 @@ class Position:
     def __repr__(self) -> str:
         return f'Position({self.__row}, {self.__column})'
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Position):
+            return NotImplemented
+        return (
+            self.__row == other.get_row()
+            and self.__column == other.get_column()
+        )
+
 
 class Movement:
     __row: int
@@ -746,11 +754,12 @@ class Game(arcade.Window):
     __maps: list[list[str]]
     __current_level_index: int
     __current_map: list[str]
+    __victory: bool
 
     def __init__(self, agent: Agent) -> None:
         super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
         self.__agent = agent
-
+        self.__victory = False
         self.__maps = [maze_1, maze_2, maze_3]
         self.__current_level_index = 0
         self.__current_map = self.__maps[self.__current_level_index]
@@ -1029,12 +1038,34 @@ class Game(arcade.Window):
         self.__actions_text.draw()
 
     def on_key_press(self, symbol: int, modifiers: int) -> None:
-        pass
+        if symbol == arcade.key.R:
+            self.restart_game()
+
+    def restart_game(self) -> None:
+        self.__current_level_index = 0
+        self.__current_map = self.__maps[0]
+
+        new_env = Environment(self.__current_map)
+        self.__agent.set_env(new_env)
+        self.__agent.reset()
+
+        self.__score = 0
+        self.__action_count = 0
+        self.__key_count = 0
+        self.__score_text.text = f'Score: {self.__score}'
+        self.__actions_text.text = f'Actions: {self.__action_count}'
+        self.__key_text.text = f'Keys: {self.__key_count}'
+
+        self.__victory = False
+
+        self.setup()
 
     def on_key_release(self, symbol: int, modifiers: int) -> None:
         pass
 
     def on_update(self, delta_time: float) -> None:
+        if self.__victory:
+            return
         self.__player_move_timer -= delta_time
 
         if self.__player_move_timer <= 0:
@@ -1109,9 +1140,11 @@ class Game(arcade.Window):
             print(
                 'VICTORY YOU HAVE FOUND THE TREASURE!\n'
                 f'FINAL SCORE: {self.__score} - '
-                f'ACTIONS: {self.__action_count}'
+                f'ACTIONS: {self.__action_count}\n'
+                'PRESS R TO RESTART'
             )
-            arcade.exit()
+            self.__victory = True
+            return
 
     def update_monsters(self) -> None:
         for monster in self.__monster_list:
