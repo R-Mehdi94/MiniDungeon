@@ -461,24 +461,40 @@ class Agent:
         self.__reward = 0
         self.__iterations = 0
 
-    def get_radar(self, pos: Position) -> dict[Action, str | None]:
-        radar: dict[Action, str | None] = {}
-        env_map = self.__env.get_map()
-        for action in Action:
-            movement: Movement = action.to_movement()
-            check_pos: Position = pos.calculate_next_position(movement)
-            if check_pos in env_map:
-                radar[action] = env_map[check_pos]
-            else:
-                radar[action] = None
-        return radar
+    def get_radar(self) -> Radar:
+        env = self.__env
+        pos = self.__pos
+
+        def content_at(delta_row: int, delta_col: int) -> CellContent:
+            target = Position(pos.get_row() + delta_row, pos.get_column() + delta_col)
+            return env.get_cell_content(target)
+
+        north = content_at(-1, 0)
+        north_east = content_at(-1, 1)
+        east = content_at(0, 1)
+        south_east = content_at(1, 1)
+        south = content_at(1, 0)
+        south_west = content_at(1, -1)
+        west = content_at(0, -1)
+        north_west = content_at(-1, -1)
+
+        return Radar(
+            north=north,
+            north_east=north_east,
+            east=east,
+            south_east=south_east,
+            south=south,
+            south_west=south_west,
+            west=west,
+            north_west=north_west,
+        )
 
     def do(
         self,
         action: Action,
         learning_rate: float = 1.0,
         discount_factor: float = 1.0,
-    ) -> None:
+    ) -> Radar:
         current_pos: Position = self.__pos
 
         next_pos, reward = self.__env.do(current_pos, action)
@@ -498,6 +514,9 @@ class Agent:
         self.__reward = reward
         self.__score += reward
         self.__iterations += 1
+
+        radar: Radar = self.get_radar()
+        return radar
 
     def choose_best_action(self) -> Action:
         return self.__qtable.choose_best_action(self.__pos)
@@ -571,6 +590,24 @@ class Environment:
 
     def set_height(self, height: int) -> None:
         self.__height = height
+
+    def get_cell_content(self, position: Position) -> CellContent:
+        char = self.__map.get(position)
+        if char is None:
+            return CellContent.OUT_OF_MAP
+        if char == MAP_WALL:
+            return CellContent.WALL
+        if char == MAP_START:
+            return CellContent.START
+        if char == MAP_KEY:
+            return CellContent.KEY
+        if char == MAP_GOAL:
+            return CellContent.TREASURE
+        if char == 'D':
+            return CellContent.DOOR
+        if char == 'M':
+            return CellContent.MONSTER
+        return CellContent.EMPTY
 
     def do(self, pos: Position, action: Action) -> tuple[Position, int]:
         movement: Movement = action.to_movement()
