@@ -12,6 +12,62 @@ class MonsterAxis(Enum):
     VERTICAL = 'VERTICAL'
 
 
+def train_agent_on_three_maps(
+    agent: Agent,
+    maps: list[list[str]],
+    episodes: int = 1000,
+    max_steps_per_episode: int = 500,
+    learning_rate: float = 0.1,
+    discount_factor: float = 0.95,
+    epsilon_start: float = 0.5,
+    epsilon_min: float = 0.05,
+    epsilon_decay: float = 0.995,
+) -> None:
+    envs: list[Environment] = [Environment(m) for m in maps]
+    epsilon: float = epsilon_start
+
+    for episode in range(episodes):
+        current_level: int = 0
+        agent.set_env(envs[current_level])
+        agent.reset()
+
+        total_reward: int = 0
+
+        for _ in range(max_steps_per_episode):
+            action: Action = agent.choose_action_epsilon_greedy(epsilon)
+            agent.do(action, learning_rate, discount_factor)
+            total_reward += agent.get_reward()
+
+            env: Environment = agent.get_env()
+            pos: Position = agent.get_pos()
+
+            cell_char: str = env.get_map().get(pos, ' ')
+
+            if cell_char == MAP_KEY:
+                agent.set_has_key(True)
+
+            if cell_char == 'D' and agent.get_has_key():
+                current_level += 1
+                if current_level >= len(envs):
+                    agent.set_done(True)
+                else:
+                    next_env = envs[current_level]
+                    agent.set_env(next_env)
+                    agent.set_pos(next_env.get_start())
+                    agent.set_has_key(False)
+
+            if agent.is_done():
+                break
+
+        if (episode + 1) % 50 == 0:
+            print(
+                f'Épisode {episode + 1}/{episodes} - '
+                f'epsilon={epsilon:.3f} - total_reward={total_reward}'
+            )
+
+        epsilon = max(epsilon_min, epsilon * epsilon_decay)
+
+
 class Monster(arcade.Sprite):
     __axis: MonsterAxis
     __direction: Action
@@ -392,7 +448,7 @@ print(
 
 class Agent:
     __env: Environment
-    __qtable: QTable
+    __q_table: QTable
     __pos: Position
     __has_key: bool
     __score: int
@@ -402,7 +458,7 @@ class Agent:
 
     def __init__(self, env: Environment) -> None:
         self.__env = env
-        self.__qtable = QTable(initial_quality=0.0)
+        self.__q_table = QTable(initial_quality=0.0)
         self.reset()
 
     def get_env(self) -> Environment:
@@ -411,11 +467,11 @@ class Agent:
     def set_env(self, env: Environment) -> None:
         self.__env = env
 
-    def get_qtable(self) -> QTable:
-        return self.__qtable
+    def get_q_table(self) -> QTable:
+        return self.__q_table
 
-    def set_qtable(self, qtable: QTable) -> None:
-        self.__qtable = qtable
+    def set_q_table(self, q_table: QTable) -> None:
+        self.__q_table = q_table
 
     def get_pos(self) -> Position:
         return self.__pos
@@ -452,6 +508,9 @@ class Agent:
 
     def set_iterations(self, iterations: int) -> None:
         self.__iterations = iterations
+
+    def is_done(self) -> bool:
+        return self.__done
 
     def reset(self) -> None:
         self.__pos = self.__env.get_start()
@@ -499,27 +558,58 @@ class Agent:
 
         next_pos, reward = self.__env.do(current_pos, action)
 
-        old_quality: float = self.__qtable.get_quality(current_pos, action)
+        old_quality: float = self.__q_table.get_quality(current_pos, action)
 
-        best_next_action: Action = self.__qtable.choose_best_action(next_pos)
-        max_next_quality: float = self.__qtable.get_quality(next_pos, best_next_action)
+        best_next_action: Action = self.__q_table.choose_best_action(next_pos)
+        max_next_quality: float = self.__q_table.get_quality(next_pos, best_next_action)
 
         updated_quality: float = old_quality + learning_rate * (
             reward + discount_factor * max_next_quality - old_quality
         )
 
-        self.__qtable.set_quality(current_pos, action, updated_quality)
+        self.__q_table.set_quality(current_pos, action, updated_quality)
 
         self.__pos = next_pos
         self.__reward = reward
         self.__score += reward
         self.__iterations += 1
 
+        if reward == Reward.KEY:
+            self.__has_key = True
+
+        if reward == Reward.GOAL or reward == Reward.MONSTER:
+            self.__done = True
+
         radar: Radar = self.get_radar()
         return radar
 
+    def choose_action_epsilon_greedy(self, epsilon: float) -> Action:
+        if random.random() < epsilon:
+            return choice(list(Action))
+        return self.choose_best_action()
+
     def choose_best_action(self) -> Action:
-        return self.__qtable.choose_best_action(self.__pos)
+        return self.__q_table.choose_best_action(self.__pos)
+
+    def run_episode(
+        self,
+        max_steps: int,
+        learning_rate: float,
+        discount_factor: float,
+        epsilon: float,
+    ) -> int:
+        self.reset()
+        total_reward: int = 0
+
+        for _ in range(max_steps):
+            action: Action = self.choose_action_epsilon_greedy(epsilon)
+            self.do(action, learning_rate, discount_factor)
+            total_reward += self.__reward
+
+            if self.__done:
+                break
+
+        return total_reward
 
 
 class Environment:
@@ -615,14 +705,17 @@ class Environment:
 
         reward: int
         if new_pos in self.__map:
-            if self.__map[new_pos] == MAP_WALL:
+            cell: str = self.__map[new_pos]
+            if cell == MAP_WALL:
                 reward = Reward.WALL
             else:
                 pos = new_pos
-                if self.__map[new_pos] == MAP_KEY:
+                if cell == MAP_KEY:
                     reward = Reward.KEY
-                elif self.__map[new_pos] == MAP_GOAL:
+                elif cell == MAP_GOAL:
                     reward = Reward.GOAL
+                elif cell == 'M':
+                    reward = Reward.MONSTER
                 else:
                     reward = Reward.STEP
         else:
@@ -1077,6 +1170,10 @@ def main() -> None:
     env = Environment(maze_1)
     agent = Agent(env)
 
+    print('=== TRAINING AGENT ON 3 LEVELS (OFFLINE Q-LEARNING) ===')
+    train_agent_on_three_maps(agent, [maze_1, maze_2, maze_3], episodes=1000)
+
+    print('=== STARTING ARCADE GAME (mouvements encore aléatoires) ===')
     window = Game(agent)
     window.setup()
     arcade.run()
