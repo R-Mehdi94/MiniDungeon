@@ -21,7 +21,7 @@ def main() -> None:
     agent = Agent(env)
 
     print('=== TRAINING AGENT ON 3 LEVELS (OFFLINE Q-LEARNING) ===')
-    train_agent_on_3_maps_use_case(agent, [MAP_1, MAP_2, MAP_3], episodes=1000)
+    train_agent_on_3_maps_use_case(agent, [MAP_1, MAP_2, MAP_3], episode_count=1000)
 
     print('=== STARTING ARCADE GAME (mouvements encore aléatoires) ===')
     window = Game(agent)
