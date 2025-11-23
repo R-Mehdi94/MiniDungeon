@@ -18,31 +18,35 @@ class Monster(arcade.Sprite):
 
         if axis is None:
             axis = choice(list(MonsterAxis))
-        self.__axis = axis
+        self.axis = axis
 
-        if self.__axis is MonsterAxis.HORIZONTAL:
-            self.__direction = choice([Action.LEFT, Action.RIGHT])
+        if self.axis is MonsterAxis.HORIZONTAL:
+            self.direction = choice([Action.LEFT, Action.RIGHT])
         else:
-            self.__direction = choice([Action.UP, Action.DOWN])
+            self.direction = choice([Action.UP, Action.DOWN])
 
-    def get_axis(self) -> MonsterAxis:
+    @property
+    def axis(self) -> MonsterAxis:
         return self.__axis
 
-    def set_axis(self, axis: MonsterAxis) -> None:
+    @axis.setter
+    def axis(self, axis: MonsterAxis) -> None:
         self.__axis = axis
 
-    def get_direction(self) -> Action:
+    @property
+    def direction(self) -> Action:
         return self.__direction
 
-    def set_direction(self, direction: Action) -> None:
+    @direction.setter
+    def direction(self, direction: Action) -> None:
         self.__direction = direction
 
     def reverse_direction(self) -> None:
-        if self.__direction is Action.LEFT:
-            self.__direction = Action.RIGHT
-        elif self.__direction is Action.RIGHT:
-            self.__direction = Action.LEFT
-        elif self.__direction is Action.UP:
-            self.__direction = Action.DOWN
-        elif self.__direction is Action.DOWN:
-            self.__direction = Action.UP
+        if self.direction is Action.LEFT:
+            self.direction = Action.RIGHT
+        elif self.direction is Action.RIGHT:
+            self.direction = Action.LEFT
+        elif self.direction is Action.UP:
+            self.direction = Action.DOWN
+        elif self.direction is Action.DOWN:
+            self.direction = Action.UP

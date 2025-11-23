@@ -8,7 +8,7 @@ from domain.models.reward import Reward
 
 class Environment:
     __map: dict[Position, str]
-    __start: Position
+    __starting_position: Position
     __key: Position | None
     __goal: Position | None
     __width: int
@@ -27,7 +27,7 @@ class Environment:
                 pos = Position(row, col)
                 self.__map[pos] = char
                 if char == MAP_START:
-                    self.__start = pos
+                    self.__starting_position = pos
                 elif char == MAP_KEY:
                     self.__key = pos
                 elif char == MAP_GOAL:
@@ -39,40 +39,52 @@ class Environment:
             col = 0
         self.__height = row
 
-    def get_map(self) -> dict[Position, str]:
+    @property
+    def map(self) -> dict[Position, str]:
         return self.__map
 
-    def set_map(self, new_map: dict[Position, str]) -> None:
+    @map.setter
+    def map(self, new_map: dict[Position, str]) -> None:
         self.__map = new_map
 
-    def get_start(self) -> Position:
-        return self.__start
+    @property
+    def starting_position(self) -> Position:
+        return self.__starting_position
 
-    def set_start(self, start: Position) -> None:
-        self.__start = start
+    @starting_position.setter
+    def starting_position(self, start: Position) -> None:
+        self.__starting_position = start
 
-    def get_key(self) -> Position | None:
+    @property
+    def key(self) -> Position | None:
         return self.__key
 
-    def set_key(self, key: Position | None) -> None:
+    @key.setter
+    def key(self, key: Position | None) -> None:
         self.__key = key
 
-    def get_goal(self) -> Position | None:
+    @property
+    def goal(self) -> Position | None:
         return self.__goal
 
-    def set_goal(self, goal: Position | None) -> None:
+    @goal.setter
+    def goal(self, goal: Position | None) -> None:
         self.__goal = goal
 
-    def get_width(self) -> int:
+    @property
+    def width(self) -> int:
         return self.__width
 
-    def set_width(self, width: int) -> None:
+    @width.setter
+    def width(self, width: int) -> None:
         self.__width = width
 
-    def get_height(self) -> int:
+    @property
+    def height(self) -> int:
         return self.__height
 
-    def set_height(self, height: int) -> None:
+    @height.setter
+    def height(self, height: int) -> None:
         self.__height = height
 
     def get_cell_content(self, position: Position) -> CellContent:

@@ -6,16 +6,20 @@ class Movement:
         self.__row = row
         self.__column = column
 
-    def get_row(self) -> int:
+    @property
+    def row(self) -> int:
         return self.__row
 
-    def set_row(self, row: int) -> None:
+    @row.setter
+    def row(self, row: int) -> None:
         self.__row = row
 
-    def get_column(self) -> int:
+    @property
+    def column(self) -> int:
         return self.__column
 
-    def set_column(self, column: int) -> None:
+    @column.setter
+    def column(self, column: int) -> None:
         self.__column = column
 
     def as_tuple(self) -> tuple[int, int]:

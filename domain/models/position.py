@@ -10,22 +10,26 @@ class Position:
         self.__row = row
         self.__column = column
 
-    def get_row(self) -> int:
+    @property
+    def row(self) -> int:
         return self.__row
 
-    def set_row(self, row: int) -> None:
+    @row.setter
+    def row(self, row: int) -> None:
         self.__row = row
 
-    def get_column(self) -> int:
+    @property
+    def column(self) -> int:
         return self.__column
 
-    def set_column(self, column: int) -> None:
+    @column.setter
+    def column(self, column: int) -> None:
         self.__column = column
 
     def calculate_next_position(self, movement: Movement) -> Position:
         return Position(
-            self.__row + movement.get_row(),
-            self.__column + movement.get_column()
+            self.__row + movement.row,
+            self.__column + movement.column
         )
 
     def __hash__(self) -> int:
@@ -38,6 +42,6 @@ class Position:
         if not isinstance(other, Position):
             return NotImplemented
         return (
-            self.__row == other.get_row()
-            and self.__column == other.get_column()
+            self.__row == other.row
+            and self.__column == other.column
         )

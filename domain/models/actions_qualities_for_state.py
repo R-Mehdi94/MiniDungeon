@@ -9,10 +9,12 @@ class ActionsQualitiesForState:
             action: initial for action in Action
         }
 
-    def get_qualities(self) -> dict[Action, float]:
+    @property
+    def qualities(self) -> dict[Action, float]:
         return self.__qualities
 
-    def set_qualities(self, qualities: dict[Action, float]) -> None:
+    @qualities.setter
+    def qualities(self, qualities: dict[Action, float]) -> None:
         self.__qualities = qualities
 
     def get(self, action: Action) -> float:

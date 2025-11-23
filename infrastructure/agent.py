@@ -10,86 +10,105 @@ from domain.models.position import Position
 
 
 class Agent:
-    __env: Environment
+    __environment: Environment
     __q_table: QTable
-    __pos: Position
+    __position: Position
     __has_key: bool
     __score: int
-    __done: bool
+    __has_finished_episode: bool
     __reward: int
-    __iterations: int
+    __iterations_count: int
 
     def __init__(self, env: Environment) -> None:
-        self.__env = env
-        self.__q_table = QTable(initial_quality=0.0)
-        self.reset()
+        self.environment = env
+        self.q_table = QTable(initial_quality=0.0)
+        self.position = self.environment.starting_position
+        self.has_key = False
+        self.score = 0
+        self.has_finished_episode = False
+        self.reward = 0
+        self.iterations_count = 0
 
-    def get_env(self) -> Environment:
-        return self.__env
+    @property
+    def environment(self) -> Environment:
+        return self.__environment
 
-    def set_env(self, env: Environment) -> None:
-        self.__env = env
+    @environment.setter
+    def environment(self, value: Environment) -> None:
+        self.__environment = value
 
-    def get_q_table(self) -> QTable:
+    @property
+    def q_table(self) -> QTable:
         return self.__q_table
 
-    def set_q_table(self, q_table: QTable) -> None:
-        self.__q_table = q_table
+    @q_table.setter
+    def q_table(self, value: QTable) -> None:
+        self.__q_table = value
 
-    def get_pos(self) -> Position:
-        return self.__pos
+    @property
+    def position(self) -> Position:
+        return self.__position
 
-    def set_pos(self, pos: Position) -> None:
-        self.__pos = pos
+    @position.setter
+    def position(self, value: Position) -> None:
+        self.__position = value
 
-    def get_has_key(self) -> bool:
+    @property
+    def has_key(self) -> bool:
         return self.__has_key
 
-    def set_has_key(self, has_key: bool) -> None:
-        self.__has_key = has_key
+    @has_key.setter
+    def has_key(self, value: bool) -> None:
+        self.__has_key = value
 
-    def get_score(self) -> int:
+    @property
+    def score(self) -> int:
         return self.__score
 
-    def set_score(self, score: int) -> None:
-        self.__score = score
+    @score.setter
+    def score(self, value: int) -> None:
+        self.__score = value
 
-    def get_done(self) -> bool:
-        return self.__done
+    @property
+    def has_finished_episode(self) -> bool:
+        return self.__has_finished_episode
 
-    def set_done(self, done: bool) -> None:
-        self.__done = done
+    @has_finished_episode.setter
+    def has_finished_episode(self, value: bool) -> None:
+        self.__has_finished_episode = value
 
-    def get_reward(self) -> int:
+    @property
+    def reward(self) -> int:
         return self.__reward
 
-    def set_reward(self, reward: int) -> None:
-        self.__reward = reward
+    @reward.setter
+    def reward(self, value: int) -> None:
+        self.__reward = value
 
-    def get_iterations(self) -> int:
-        return self.__iterations
+    @property
+    def iterations_count(self) -> int:
+        return self.__iterations_count
 
-    def set_iterations(self, iterations: int) -> None:
-        self.__iterations = iterations
-
-    def is_done(self) -> bool:
-        return self.__done
+    @iterations_count.setter
+    def iterations_count(self, value: int) -> None:
+        self.__iterations_count = value
 
     def reset(self) -> None:
-        self.__pos = self.__env.get_start()
-        self.__has_key = False
-        self.__score = 0
-        self.__done = False
-        self.__reward = 0
-        self.__iterations = 0
+        self.position = self.environment.starting_position
+        self.has_key = False
+        self.score = 0
+        self.has_finished_episode = False
+        self.reward = 0
+        self.iterations_count = 0
 
-    def get_radar(self) -> Radar:
-        env = self.__env
-        pos = self.__pos
+    def scan_area(self) -> Radar:
 
         def content_at(delta_row: int, delta_col: int) -> CellContent:
-            target = Position(pos.get_row() + delta_row, pos.get_column() + delta_col)
-            return env.get_cell_content(target)
+            target = Position(
+                self.position.row + delta_row,
+                self.position.column + delta_col
+            )
+            return self.environment.get_cell_content(target)
 
         north = content_at(-1, 0)
         north_east = content_at(-1, 1)
@@ -101,49 +120,47 @@ class Agent:
         north_west = content_at(-1, -1)
 
         return Radar(
-            north=north,
-            north_east=north_east,
-            east=east,
-            south_east=south_east,
-            south=south,
-            south_west=south_west,
-            west=west,
-            north_west=north_west,
+            north_content=north,
+            north_east_content=north_east,
+            east_content=east,
+            south_east_content=south_east,
+            south_content=south,
+            south_west_content=south_west,
+            west_content=west,
+            north_west_content=north_west
         )
 
-    def do(
+    def execute_action_and_learn_from_reward(
         self,
         action: Action,
         learning_rate: float = 1.0,
-        discount_factor: float = 1.0,
+        discount_factor: float = 1.0
     ) -> Radar:
-        current_pos: Position = self.__pos
+        current_position: Position = self.position
 
-        next_pos, reward = self.__env.do(current_pos, action)
+        next_position, reward = self.environment.do(current_position, action)
 
-        old_quality: float = self.__q_table.get_quality(current_pos, action)
+        old_quality: float = self.q_table.get_quality(current_position, action)
 
-        best_next_action: Action = self.__q_table.choose_best_action(next_pos)
-        max_next_quality: float = self.__q_table.get_quality(next_pos, best_next_action)
+        best_next_action: Action = self.q_table.choose_best_action(next_position)
+        max_next_quality: float = self.q_table.get_quality(next_position, best_next_action)
 
-        updated_quality: float = old_quality + learning_rate * (
-            reward + discount_factor * max_next_quality - old_quality
-        )
+        updated_quality: float = old_quality + learning_rate * (reward + discount_factor * max_next_quality - old_quality)
 
-        self.__q_table.set_quality(current_pos, action, updated_quality)
+        self.q_table.set_quality(current_position, action, updated_quality)
 
-        self.__pos = next_pos
-        self.__reward = reward
-        self.__score += reward
-        self.__iterations += 1
+        self.position = next_position
+        self.reward = reward
+        self.score += reward
+        self.iterations_count += 1
 
         if reward == Reward.KEY:
-            self.__has_key = True
+            self.has_key = True
 
         if reward == Reward.GOAL or reward == Reward.MONSTER:
-            self.__done = True
+            self.has_finished_episode = True
 
-        radar: Radar = self.get_radar()
+        radar: Radar = self.scan_area()
         return radar
 
     def choose_action_epsilon_greedy(self, epsilon: float) -> Action:
@@ -152,7 +169,7 @@ class Agent:
         return self.choose_best_action()
 
     def choose_best_action(self) -> Action:
-        return self.__q_table.choose_best_action(self.__pos)
+        return self.q_table.choose_best_action(self.position)
 
     def run_episode(
         self,
@@ -166,10 +183,10 @@ class Agent:
 
         for _ in range(max_steps):
             action: Action = self.choose_action_epsilon_greedy(epsilon)
-            self.do(action, learning_rate, discount_factor)
-            total_reward += self.__reward
+            self.execute_action_and_learn_from_reward(action, learning_rate, discount_factor)
+            total_reward += self.reward
 
-            if self.__done:
+            if self.has_finished_episode:
                 break
 
         return total_reward
