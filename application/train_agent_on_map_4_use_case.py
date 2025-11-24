@@ -15,6 +15,8 @@ def train_agent_on_map_4_use_case(
     exploration_decay_factor: float = 0.995,
 ) -> None:
     '''
+    Trains the agent only on MAP_4 using Q-learning with an epsilon-greedy
+    (exploration_probability) policy.
     '''
     environment = Environment(MAP_4)
     exploration_probability: float = initial_exploration_probability
