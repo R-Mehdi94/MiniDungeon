@@ -19,6 +19,10 @@ def train_agent_on_3_maps_use_case(
     '''
     Runs the training of the agent on the 3 maps of the dungeon.
 
+    :param Agent agent: The agent to train. Its internal state and knowledge are updated across all episodes and maps.
+    :param list[list[str]] maps: The dungeon maps used as training levels.
+    :param int episode_count: Number of training episodes to run. Each episode starts on the first map and continues until the agent finishes the episode or reaches the maximum number of steps.
+    :param int max_steps_per_episode: Maximum number of steps allowed in a single episode. This prevents episodes from running indefinitely if the agent keeps wandering without finishing.
     :param float new_experience_weight: The learning rate. Between 0 and 1. Controls the strength of the new experience in relation to what the agent already knew. The higher the learning rate, the faster the agent "forgets" the old quality and adjusts to what it has just experienced.
     :param float future_reward_weight: This parameter, also known as discount factor, is used to weight the future rewards. Between 0 and 1. The higher this value is, the more importance is given to future rewards compared to immediate rewards.
     :param float initial_exploration_probability: The probability of the agent to do a random exploration action. It should not be 0 at the start of learning, otherwise the agent will always repeat the same mistakes and never explore the dungeon.
