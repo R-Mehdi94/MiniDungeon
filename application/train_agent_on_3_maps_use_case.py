@@ -63,7 +63,7 @@ def train_agent_on_3_maps_use_case(
 
         if (episode + 1) % 50 == 0:
             print(
-                f'Épisode {episode + 1}/{episode_count} - '
+                f'Episode {episode + 1}/{episode_count} - '
                 f'epsilon={exploration_probability:.3f} - total_reward={total_reward}'
             )
 
