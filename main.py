@@ -52,7 +52,7 @@ def run_training_on_map_4_scenario() -> None:
     print("=== TRAINING AGENT ON MAP 4 (OFFLINE Q-LEARNING) ===")
     train_agent_on_map_4_use_case(
         agent=agent,
-        episodes=1000,
+        episode_count=1000,
     )
 
     print("=== STARTING ARCADE GAME (MAP 4 SCENARIO) ===")

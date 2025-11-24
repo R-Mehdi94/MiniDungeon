@@ -163,8 +163,15 @@ class Agent:
         radar: Radar = self.scan_area()
         return radar
 
-    def choose_action_epsilon_greedy(self, epsilon: float) -> Action:
-        if random.random() < epsilon:
+    def choose_action_from_knowledge_or_random(self, exploration_rate: float) -> Action:
+        '''
+        Returns a random action or an action from the knowledge according to the exploration rate and a random generated float number between 0.0 and 1.0.
+
+        :param float exploration_rate: The probability of the agent to do a random action to explore the map.
+        :rtype: Action
+        :return: The next action the agent will perform. It could be a random action or the best action according to the knowledge of the agent.
+        '''
+        if random.random() < exploration_rate:
             return choice(list(Action))
         return self.choose_best_action()
 
@@ -176,13 +183,13 @@ class Agent:
         max_steps: int,
         learning_rate: float,
         discount_factor: float,
-        epsilon: float,
+        exploration_rate: float,
     ) -> int:
         self.reset()
         total_reward: int = 0
 
         for _ in range(max_steps):
-            action: Action = self.choose_action_epsilon_greedy(epsilon)
+            action: Action = self.choose_action_from_knowledge_or_random(exploration_rate)
             self.execute_action_and_learn_from_reward(action, learning_rate, discount_factor)
             total_reward += self.reward
 
