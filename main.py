@@ -3,7 +3,7 @@ from __future__ import annotations
 import arcade
 
 from application.train_agent_on_3_maps_use_case import train_agent_on_3_maps_use_case
-from application.train_agent_on_map_4_use_case import train_agent_on_map_4_use_case
+#from application.train_agent_on_map_4_use_case import train_agent_on_map_4_use_case
 from domain.models.environment import Environment
 from infrastructure.agent import Agent
 from infrastructure.arcade.settings import (
@@ -50,10 +50,10 @@ def run_training_on_map_4_scenario() -> None:
     agent = Agent(environment)
 
     print("=== TRAINING AGENT ON MAP 4 (OFFLINE Q-LEARNING) ===")
-    train_agent_on_map_4_use_case(
-        agent=agent,
-        episode_count=1000,
-    )
+    #train_agent_on_map_4_use_case(
+    #    agent=agent,
+    #    episode_count=1000,
+    #)
 
     print("=== STARTING ARCADE GAME (MAP 4 SCENARIO) ===")
     window = Game(agent, maps=maps)

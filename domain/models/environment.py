@@ -1,6 +1,6 @@
 from domain.models.action import Action
 from domain.models.cell_content import CellContent
-from domain.models.map_constants import MAP_GOAL, MAP_KEY, MAP_START, MAP_WALL
+from domain.models.map_constants import *
 from domain.models.movement import Movement
 from domain.models.position import Position
 from domain.models.reward import Reward
@@ -99,9 +99,9 @@ class Environment:
             return CellContent.KEY
         if char == MAP_GOAL:
             return CellContent.TREASURE
-        if char == 'D':
+        if char == MAP_DOOR:
             return CellContent.DOOR
-        if char == 'M':
+        if char == MAP_MONSTER:
             return CellContent.MONSTER
         return CellContent.EMPTY
 
@@ -120,7 +120,7 @@ class Environment:
                     reward = Reward.KEY
                 elif cell == MAP_GOAL:
                     reward = Reward.GOAL
-                elif cell == 'M':
+                elif cell == MAP_MONSTER:
                     reward = Reward.MONSTER
                 else:
                     reward = Reward.STEP

@@ -409,7 +409,7 @@ class Game(arcade.Window):
         if self.player_move_timer <= 0:
             self.player_move_timer = random.uniform(0.1, 0.4)
 
-            direction: Action = choice(list(Action))
+            direction: Action = self.agent.choose_action_from_knowledge_or_random(0)
 
             self.action_count += 1
             self.score += Reward.STEP
@@ -445,6 +445,7 @@ class Game(arcade.Window):
             print(f"KEY COLLECTED! TOTAL: {self.key_count}")
 
         for door in self.door_list:
+
             distance: float = arcade.get_distance_between_sprites(
                 self.player_sprite,
                 door,
@@ -452,9 +453,11 @@ class Game(arcade.Window):
             if distance < 47 and self.key_count > 0:
                 print("DOOR REACHED WITH A KEY -> NEXT LEVEL")
                 self.key_count -= 1
+                self.score += Reward.DOR
                 self.go_to_next_level()
                 return
-
+            else:
+                self.score += Reward.DOR_NO_KEY
         monster_hit_list = arcade.check_for_collision_with_list(
             self.player_sprite,
             self.monster_list,

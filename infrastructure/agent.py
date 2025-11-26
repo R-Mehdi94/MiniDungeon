@@ -110,25 +110,16 @@ class Agent:
             )
             return self.environment.get_cell_content(target)
 
-        north = content_at(-1, 0)
-        north_east = content_at(-1, 1)
-        east = content_at(0, 1)
-        south_east = content_at(1, 1)
-        south = content_at(1, 0)
-        south_west = content_at(1, -1)
-        west = content_at(0, -1)
-        north_west = content_at(-1, -1)
+        radar_3x3 = []
 
-        return Radar(
-            north_content=north,
-            north_east_content=north_east,
-            east_content=east,
-            south_east_content=south_east,
-            south_content=south,
-            south_west_content=south_west,
-            west_content=west,
-            north_west_content=north_west
-        )
+        for row in range(3):
+            row_data = []
+            for col in range(3):
+                content = content_at(row, col)
+                row_data.append(content)
+                radar_3x3.append(row_data)
+
+        return Radar(radar_3x3)
 
     def execute_action_and_learn_from_reward(
         self,
@@ -171,8 +162,8 @@ class Agent:
         :rtype: Action
         :return: The next action the agent will perform. It could be a random action or the best action according to the knowledge of the agent.
         '''
-        if random.random() < exploration_rate:
-            return choice(list(Action))
+        #if random.random() < exploration_rate:
+        #    return choice(list(Action))
         return self.choose_best_action()
 
     def choose_best_action(self) -> Action:
