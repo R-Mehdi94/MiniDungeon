@@ -37,6 +37,8 @@ class Game(arcade.Window):
     __score_text: arcade.Text
     __action_count: int
     __actions_text: arcade.Text
+    __exploration_text: arcade.Text
+    __qtable_text: arcade.SpriteList[arcade.Sprite]
 
     __maps: list[list[str]]
     __current_level_index: int
@@ -90,6 +92,14 @@ class Game(arcade.Window):
             f"Actions: {self.action_count}",
             10,
             70,
+            arcade.color.WHITE,
+            18,
+        )
+
+        self.exploration_text = arcade.Text(
+            f"Exploration: {self.agent.exploration}",
+            10,
+            100,
             arcade.color.WHITE,
             18,
         )
@@ -243,12 +253,30 @@ class Game(arcade.Window):
         self.__actions_text = text
 
     @property
+    def exploration_text(self) -> arcade.Text:
+        return self.__exploration_text
+
+    @exploration_text.setter
+    def exploration_text(self, text: arcade.Text) -> None:
+        self.__exploration_text = text
+
+    @property
     def victory(self) -> bool:
         return self.__victory
 
     @victory.setter
     def victory(self, value: bool) -> None:
         self.__victory = value
+
+
+
+    @property
+    def qtable_text(self) -> arcade.Text:
+        return self.__qtable_text
+
+    @qtable_text.setter
+    def qtable_text(self, text: arcade.Text) -> None:
+        self.__qtable_text = text
 
     def setup(self) -> None:
         print("\n=== LEVEL LOADING ===")
@@ -363,12 +391,15 @@ class Game(arcade.Window):
         self.key_text.draw()
         self.score_text.draw()
         self.actions_text.draw()
+        self.exploration_text.draw()
+        #self.qtable_text.draw()
 
     def on_key_press(self, symbol: int, modifiers: int) -> None:
         if symbol == arcade.key.R:
             self.restart_game()
         if symbol == arcade.key.E:
             self.agent.exploration += 0.2
+
 
 
     def restart_game(self) -> None:
@@ -384,6 +415,8 @@ class Game(arcade.Window):
         self.score_text.text = f"Score: {self.agent.score}"
         self.actions_text.text = f"Actions: {self.action_count}"
         self.key_text.text = f"Keys: {self.key_count}"
+        self.exploration_text = f"Exploration: {self.agent.exploration}"
+        #self.qtable_text = f"Qtable:  {self.agent.q_table.}"
 
         self.victory = False
 
@@ -401,12 +434,16 @@ class Game(arcade.Window):
         if self.player_move_timer <= 0:
             self.player_move_timer = random.uniform(0.1, 0.4)
 
+            if(self.agent.exploration > 0):
+                self.agent.exploration -= 0.02
+
             direction: Action = self.agent.choose_action_from_knowledge_or_random()
 
             self.action_count += 1
             self.agent.score += Reward.STEP
             self.score_text.text = f"Score: {self.agent.score}"
             self.actions_text.text = f"Actions: {self.action_count}"
+            self.exploration_text.text = f"Exploration: {self.agent.exploration:.2f}"
 
             if direction is Action.UP:
                 self.player_sprite.change_y = PLAYER_MOVEMENT_SPEED
@@ -439,7 +476,6 @@ class Game(arcade.Window):
         for door in self.door_list:
 
             distance = arcade.get_distance_between_sprites(self.player_sprite, door)
-            print(f"DISTANCE: {distance}")
             if distance < 47:
                 if self.key_count > 0:
                     print("DOOR REACHED WITH A KEY -> NEXT LEVEL")
