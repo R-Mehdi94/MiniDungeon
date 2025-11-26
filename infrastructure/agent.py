@@ -18,6 +18,7 @@ class Agent:
     __has_finished_episode: bool
     __reward: int
     __iterations_count: int
+    __exploration: float = 0
 
     def __init__(self, env: Environment) -> None:
         self.environment = env
@@ -89,6 +90,14 @@ class Agent:
     def iterations_count(self) -> int:
         return self.__iterations_count
 
+    @property
+    def exploration(self) -> float:
+        return self.__exploration
+
+    @exploration.setter
+    def exploration(self, value: float) -> None:
+        self.__exploration = value
+
     @iterations_count.setter
     def iterations_count(self, value: int) -> None:
         self.__iterations_count = value
@@ -154,7 +163,7 @@ class Agent:
         radar: Radar = self.scan_area()
         return radar
 
-    def choose_action_from_knowledge_or_random(self, exploration_rate: float) -> Action:
+    def choose_action_from_knowledge_or_random(self) -> Action:
         '''
         Returns a random action or an action from the knowledge according to the exploration rate and a random generated float number between 0.0 and 1.0.
 
@@ -162,8 +171,8 @@ class Agent:
         :rtype: Action
         :return: The next action the agent will perform. It could be a random action or the best action according to the knowledge of the agent.
         '''
-        #if random.random() < exploration_rate:
-        #    return choice(list(Action))
+        if random.random() < self.exploration:
+            return choice(list(Action))
         return self.choose_best_action()
 
     def choose_best_action(self) -> Action:
@@ -180,7 +189,7 @@ class Agent:
         total_reward: int = 0
 
         for _ in range(max_steps):
-            action: Action = self.choose_action_from_knowledge_or_random(exploration_rate)
+            action: Action = self.choose_action_from_knowledge_or_random()
             self.execute_action_and_learn_from_reward(action, learning_rate, discount_factor)
             total_reward += self.reward
 

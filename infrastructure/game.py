@@ -34,7 +34,6 @@ class Game(arcade.Window):
     __key_text: arcade.Text
     __player_move_timer: float
 
-    __score: int
     __score_text: arcade.Text
     __action_count: int
     __actions_text: arcade.Text
@@ -79,10 +78,9 @@ class Game(arcade.Window):
             18,
         )
 
-        self.score = 0
         self.action_count = 0
         self.score_text = arcade.Text(
-            f"Score: {self.score}",
+            f"Score: {self.agent.score}",
             10,
             40,
             arcade.color.WHITE,
@@ -219,14 +217,6 @@ class Game(arcade.Window):
     @current_map.setter
     def current_map(self, current_map: list[str]) -> None:
         self.__current_map = current_map
-
-    @property
-    def score(self) -> int:
-        return self.__score
-
-    @score.setter
-    def score(self, score: int) -> None:
-        self.__score = score
 
     @property
     def action_count(self) -> int:
@@ -377,6 +367,9 @@ class Game(arcade.Window):
     def on_key_press(self, symbol: int, modifiers: int) -> None:
         if symbol == arcade.key.R:
             self.restart_game()
+        if symbol == arcade.key.E:
+            self.agent.exploration += 0.2
+
 
     def restart_game(self) -> None:
         self.current_level_index = 0
@@ -386,10 +379,9 @@ class Game(arcade.Window):
         self.agent.environment = new_env
         self.agent.reset()
 
-        self.score = 0
         self.action_count = 0
         self.key_count = 0
-        self.score_text.text = f"Score: {self.score}"
+        self.score_text.text = f"Score: {self.agent.score}"
         self.actions_text.text = f"Actions: {self.action_count}"
         self.key_text.text = f"Keys: {self.key_count}"
 
@@ -409,11 +401,11 @@ class Game(arcade.Window):
         if self.player_move_timer <= 0:
             self.player_move_timer = random.uniform(0.1, 0.4)
 
-            direction: Action = self.agent.choose_action_from_knowledge_or_random(0)
+            direction: Action = self.agent.choose_action_from_knowledge_or_random()
 
             self.action_count += 1
-            self.score += Reward.STEP
-            self.score_text.text = f"Score: {self.score}"
+            self.agent.score += Reward.STEP
+            self.score_text.text = f"Score: {self.agent.score}"
             self.actions_text.text = f"Actions: {self.action_count}"
 
             if direction is Action.UP:
@@ -439,34 +431,33 @@ class Game(arcade.Window):
         for key in key_hit_list:
             key.remove_from_sprite_lists()
             self.key_count += 1
-            self.score += Reward.KEY
+            self.agent.score += Reward.KEY
             self.key_text.text = f"Keys: {self.key_count}"
-            self.score_text.text = f"Score: {self.score}"
+            self.score_text.text = f"Score: {self.agent.score}"
             print(f"KEY COLLECTED! TOTAL: {self.key_count}")
 
         for door in self.door_list:
 
-            distance: float = arcade.get_distance_between_sprites(
-                self.player_sprite,
-                door,
-            )
-            if distance < 47 and self.key_count > 0:
-                print("DOOR REACHED WITH A KEY -> NEXT LEVEL")
-                self.key_count -= 1
-                self.score += Reward.DOR
-                self.go_to_next_level()
-                return
-            else:
-                self.score += Reward.DOR_NO_KEY
+            distance = arcade.get_distance_between_sprites(self.player_sprite, door)
+            print(f"DISTANCE: {distance}")
+            if distance < 47:
+                if self.key_count > 0:
+                    print("DOOR REACHED WITH A KEY -> NEXT LEVEL")
+                    self.key_count -= 1
+                    self.agent.score += Reward.DOOR
+                    self.go_to_next_level()
+                    return
+                else:
+                    self.agent.score += Reward.DOR_NO_KEY
         monster_hit_list = arcade.check_for_collision_with_list(
             self.player_sprite,
             self.monster_list,
         )
         if len(monster_hit_list) > 0:
-            self.score += Reward.MONSTER
-            self.score_text.text = f"Score: {self.score}"
+            self.agent.score += Reward.MONSTER
+            self.score_text.text = f"Score: {self.agent.score}"
             print(
-                f"GAME OVER - SCORE: {self.score} - "
+                f"GAME OVER - SCORE: {self.agent.score} - "
                 f"ACTIONS: {self.action_count}"
             )
             self.setup()
@@ -476,11 +467,11 @@ class Game(arcade.Window):
             self.treasure_list,
         )
         if len(treasure_hit_list) > 0:
-            self.score += Reward.GOAL
-            self.score_text.text = f"Score: {self.score}"
+            self.agent.score += Reward.GOAL
+            self.score_text.text = f"Score: {self.agent.score}"
             print(
                 "VICTORY YOU HAVE FOUND THE TREASURE!\n"
-                f"FINAL SCORE: {self.score} - "
+                f"FINAL SCORE: {self.agent.score} - "
                 f"ACTIONS: {self.action_count}\n"
                 "PRESS R TO RESTART"
             )
@@ -525,7 +516,7 @@ class Game(arcade.Window):
         if self.current_level_index >= len(self.maps):
             print(
                 "NO MORE LEVELS, EXITING\n"
-                f"FINAL SCORE: {self.score} - "
+                f"FINAL SCORE: {self.agent.score} - "
                 f"ACTIONS: {self.action_count}"
             )
             arcade.exit()
