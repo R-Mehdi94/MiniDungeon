@@ -1,3 +1,4 @@
+import pickle
 from random import choice
 import random
 from domain.models.action import Action
@@ -20,6 +21,7 @@ class Agent:
     __reward: int
     __iterations_count: int
     __exploration: float
+    __history: list
     __radar: Radar
 
     def __init__(self, env: Environment) -> None:
@@ -34,6 +36,7 @@ class Agent:
         self.reward = 0
         self.iterations_count = 0
         self.exploration = 0
+        self.history = []
         self.radar = Radar([])
 
     @property
@@ -113,6 +116,14 @@ class Agent:
         self.__exploration = value
 
     @property
+    def history(self) -> list:
+        return self.__history
+
+    @history.setter
+    def history(self, value: list) -> None:
+        self.__history = value
+
+    @property
     def radar(self) -> Radar:
         return self.__radar
 
@@ -125,6 +136,8 @@ class Agent:
         self.__iterations_count = value
 
     def reset(self) -> None:
+        if self.score != None:
+            self.history.append(self.score)
         self.position = self.environment.starting_position
         self.has_key = False
         self.has_door = False
@@ -261,3 +274,11 @@ class Agent:
                 break
 
         return total_reward
+
+    def save(self, filename):
+        with open(filename, 'wb') as file:
+            pickle.dump((self.q_table, self.history), file)
+
+    def load(self, filename):
+        with open(filename, 'rb') as file:
+            self.q_table, self.history = pickle.load(file)

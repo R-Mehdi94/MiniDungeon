@@ -1,18 +1,15 @@
 import random
-from random import choice
 
 import arcade
 
 from domain.models.action import Action
 from domain.models.environment import Environment
 from domain.models.position import Position
-from domain.models.reward import Reward
 from infrastructure.agent import Agent
 from infrastructure.arcade.settings import (
     GLOBAL_SCALING,
     MAP_HEIGHT_TILES,
     MONSTER_MOVEMENT_SPEED,
-    PLAYER_MOVEMENT_SPEED,
     SCREEN_HEIGHT,
     SCREEN_TITLE,
     SCREEN_WIDTH,
@@ -45,6 +42,7 @@ class Game(arcade.Window):
     __current_level_index: int
     __current_map: list[str]
     __victory: bool
+
 
     def __init__(self, agent: Agent, maps: list[list[str]]) -> None:
         super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
@@ -319,7 +317,6 @@ class Game(arcade.Window):
         self.monster_list = arcade.SpriteList()
         self.treasure_list = arcade.SpriteList()
 
-        self.player_move_timer = 0.0
 
         player_found: bool = False
 
@@ -440,7 +437,7 @@ class Game(arcade.Window):
         self.score_text.text = f"Score: {self.agent.score}"
         self.actions_text.text = f"Actions: {self.action_count}"
         self.key_text.text = f"Keys: {self.key_count}"
-        self.exploration_text = f"Exploration: {self.agent.exploration}"
+        self.exploration_text.text = f"Exploration: {self.agent.exploration}"
         # self.qtable_text = f"Qtable:  {self.agent.q_table.}"
 
         self.victory = False
@@ -458,7 +455,7 @@ class Game(arcade.Window):
         self.player_move_timer -= delta_time
 
         if self.player_move_timer <= 0:
-            self.player_move_timer = random.uniform(0.0, 0.01)
+            self.player_move_timer = random.uniform(0.0, 0.0)
 
             direction: Action = self.agent.choose_action_from_knowledge_or_random()
 
