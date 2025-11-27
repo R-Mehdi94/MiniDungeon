@@ -105,7 +105,7 @@ class Environment:
             return CellContent.MONSTER
         return CellContent.EMPTY
 
-    def do(self, pos: Position, action: Action) -> tuple[Position, int]:
+    def do(self, pos: Position, action: Action, has_key: bool) -> tuple[Position, int]:
         movement: Movement = action.to_movement()
         new_pos: Position = pos.calculate_next_position(movement)
 
@@ -115,15 +115,31 @@ class Environment:
             if cell == MAP_WALL:
                 reward = Reward.WALL
             else:
-                pos = new_pos
+
                 if cell == MAP_KEY:
+                    pos = new_pos
+                    self.__map[new_pos] = MAP_EMPTY
+
                     reward = Reward.KEY
+
+                elif cell == MAP_DOOR:
+                    if has_key:
+                        reward = Reward.DOOR
+                        pos = new_pos
+                        self.__map[new_pos] = MAP_EMPTY
+
+                    else:
+                        reward = Reward.DOR_NO_KEY
+
                 elif cell == MAP_GOAL:
                     reward = Reward.GOAL
+                    pos = new_pos
                 elif cell == MAP_MONSTER:
                     reward = Reward.MONSTER
+                    pos = new_pos
                 else:
                     reward = Reward.STEP
+                    pos = new_pos
         else:
             reward = Reward.OUT_OF_MAP
 

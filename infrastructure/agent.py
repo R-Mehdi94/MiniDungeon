@@ -20,7 +20,9 @@ class Agent:
     __iterations_count: int
     __exploration: float
     __radar: Radar
+
     def __init__(self, env: Environment) -> None:
+
         self.environment = env
         self.q_table = QTable(initial_quality=0.0)
         self.position = self.environment.starting_position
@@ -108,7 +110,6 @@ class Agent:
     def radar(self, value: Radar) -> None:
         self.__radar = value
 
-
     @iterations_count.setter
     def iterations_count(self, value: int) -> None:
         self.__iterations_count = value
@@ -142,22 +143,23 @@ class Agent:
         return Radar(radar_3x3)
 
     def execute_action_and_learn_from_reward(
-        self,
-        action: Action,
-        learning_rate: float = 1.0,
-        discount_factor: float = 1.0
+            self,
+            action: Action,
+            learning_rate: float = 0.3,
+            discount_factor: float = 0.9
     ) -> None:
         self.radar = self.scan_area()
         current_position: Position = self.position
 
-        next_position, reward = self.environment.do(current_position, action)
+        next_position, reward = self.environment.do(current_position, action, self.has_key)
 
         old_quality: float = self.q_table.get_quality(current_position, action)
 
         best_next_action: Action = self.q_table.choose_best_action(next_position)
         max_next_quality: float = self.q_table.get_quality(next_position, best_next_action)
 
-        updated_quality: float = old_quality + learning_rate * (reward + discount_factor * max_next_quality - old_quality)
+        updated_quality: float = old_quality + learning_rate * (
+                reward + discount_factor * max_next_quality - old_quality)
 
         self.q_table.set_quality(current_position, action, updated_quality)
 
@@ -168,10 +170,11 @@ class Agent:
 
         if reward == Reward.KEY:
             self.has_key = True
+        elif reward == Reward.DOOR:
+            self.has_key = False
 
         if reward == Reward.GOAL or reward == Reward.MONSTER:
             self.has_finished_episode = True
-
 
     def choose_action_from_knowledge_or_random(self) -> Action:
         '''
@@ -190,11 +193,11 @@ class Agent:
         return self.q_table.choose_best_action(self.position)
 
     def run_episode(
-        self,
-        max_steps: int,
-        learning_rate: float,
-        discount_factor: float,
-        exploration_rate: float,
+            self,
+            max_steps: int,
+            learning_rate: float,
+            discount_factor: float,
+            exploration_rate: float,
     ) -> int:
         self.reset()
         total_reward: int = 0

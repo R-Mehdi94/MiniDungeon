@@ -121,7 +121,6 @@ class Game(arcade.Window):
             18,
         )
 
-
         self.player_move_timer = 0.0
 
         arcade.set_background_color(arcade.color.DARK_BROWN)
@@ -286,8 +285,6 @@ class Game(arcade.Window):
     def victory(self, value: bool) -> None:
         self.__victory = value
 
-
-
     @property
     def qtable_text(self) -> arcade.Text:
         return self.__qtable_text
@@ -303,8 +300,6 @@ class Game(arcade.Window):
 
         for y in range(0, SCREEN_HEIGHT + TILE_PIXEL_SIZE, TILE_PIXEL_SIZE):
             arcade.draw_line(0, y, SCREEN_WIDTH, y, arcade.color.WHITE, 1)
-
-
 
     def setup(self) -> None:
         print("\n=== LEVEL LOADING ===")
@@ -332,8 +327,8 @@ class Game(arcade.Window):
             for col_index, char in enumerate(row):
                 x: float = col_index * TILE_PIXEL_SIZE + TILE_PIXEL_SIZE / 2
                 y: float = (
-                    (MAP_HEIGHT_TILES - 1 - row_index) * TILE_PIXEL_SIZE
-                    + TILE_PIXEL_SIZE / 2
+                        (MAP_HEIGHT_TILES - 1 - row_index) * TILE_PIXEL_SIZE
+                        + TILE_PIXEL_SIZE / 2
                 )
 
                 if char == "#":
@@ -408,7 +403,7 @@ class Game(arcade.Window):
             f"{len(self.monster_list)} monsters, {len(self.door_list)} doors"
         )
 
-        self.agent.position = Position(3,2)
+        self.agent.position = Position(3, 2)
 
     def on_draw(self) -> None:
         self.clear()
@@ -432,8 +427,6 @@ class Game(arcade.Window):
         if symbol == arcade.key.E:
             self.agent.exploration += 0.2
 
-
-
     def restart_game(self) -> None:
         self.current_level_index = 0
         self.current_map = self.maps[0]
@@ -448,7 +441,7 @@ class Game(arcade.Window):
         self.actions_text.text = f"Actions: {self.action_count}"
         self.key_text.text = f"Keys: {self.key_count}"
         self.exploration_text = f"Exploration: {self.agent.exploration}"
-        #self.qtable_text = f"Qtable:  {self.agent.q_table.}"
+        # self.qtable_text = f"Qtable:  {self.agent.q_table.}"
 
         self.victory = False
 
@@ -458,6 +451,7 @@ class Game(arcade.Window):
         pass
 
     def on_update(self, delta_time: float) -> None:
+        global new_x, new_y
         if self.victory:
             return
 
@@ -471,60 +465,52 @@ class Game(arcade.Window):
             self.agent.execute_action_and_learn_from_reward(direction)
 
             self.action_count += 1
-            self.agent.score += Reward.STEP
+
             self.score_text.text = f"Score: {self.agent.score}"
             self.actions_text.text = f"Actions: {self.action_count}"
             self.exploration_text.text = f"Exploration: {self.agent.exploration:.2f}"
             q_table_size = len(self.agent.q_table.table)
             self.position_text.text = f"Pos: {self.agent.position}"
             self.qtable_text.text = f"States: {q_table_size}"
+            new_y = self.agent.position.row
+            new_x = self.agent.position.column
 
-            if direction is Action.UP:
-                self.player_sprite.change_y = PLAYER_MOVEMENT_SPEED
-                self.player_sprite.change_x = 0
-            elif direction is Action.DOWN:
-                self.player_sprite.change_y = -PLAYER_MOVEMENT_SPEED
-                self.player_sprite.change_x = 0
-            elif direction is Action.LEFT:
-                self.player_sprite.change_x = -PLAYER_MOVEMENT_SPEED
-                self.player_sprite.change_y = 0
-            elif direction is Action.RIGHT:
-                self.player_sprite.change_x = PLAYER_MOVEMENT_SPEED
-                self.player_sprite.change_y = 0
+            X = new_x * TILE_PIXEL_SIZE + TILE_PIXEL_SIZE / 2
+            Y = ((MAP_HEIGHT_TILES - 1 - new_y) * TILE_PIXEL_SIZE + TILE_PIXEL_SIZE / 2)
+
+            self.player_sprite.center_y = Y
+            self.player_sprite.center_x = X
 
         self.physics_engine.update()
         self.update_monsters()
+        self.action_count = self.agent.iterations_count
 
         key_hit_list = arcade.check_for_collision_with_list(
             self.player_sprite,
             self.key_list,
         )
+
         for key in key_hit_list:
             key.remove_from_sprite_lists()
-            self.key_count += 1
-            self.agent.score += Reward.KEY
+
             self.key_text.text = f"Keys: {self.key_count}"
             self.score_text.text = f"Score: {self.agent.score}"
             print(f"KEY COLLECTED! TOTAL: {self.key_count}")
 
-        for door in self.door_list:
+        door_hit_list = arcade.check_for_collision_with_list(
+            self.player_sprite,
+            self.door_list,
+        )
+        for door in door_hit_list:
+            door.remove_from_sprite_lists()
 
-            distance = arcade.get_distance_between_sprites(self.player_sprite, door)
-            if distance < 47:
-                if self.key_count > 0:
-                    print("DOOR REACHED WITH A KEY -> NEXT LEVEL")
-                    self.key_count -= 1
-                    self.agent.score += Reward.DOOR
-                    self.go_to_next_level()
-                    return
-                else:
-                    self.agent.score += Reward.DOR_NO_KEY
+            # self.go_to_next_level()
+
         monster_hit_list = arcade.check_for_collision_with_list(
             self.player_sprite,
             self.monster_list,
         )
         if len(monster_hit_list) > 0:
-            self.agent.score += Reward.MONSTER
             self.score_text.text = f"Score: {self.agent.score}"
             print(
                 f"GAME OVER - SCORE: {self.agent.score} - "
@@ -537,7 +523,6 @@ class Game(arcade.Window):
             self.treasure_list,
         )
         if len(treasure_hit_list) > 0:
-            self.agent.score += Reward.GOAL
             self.score_text.text = f"Score: {self.agent.score}"
             print(
                 "VICTORY YOU HAVE FOUND THE TREASURE!\n"
@@ -546,7 +531,6 @@ class Game(arcade.Window):
                 "PRESS R TO RESTART"
             )
             self.victory = True
-            return
 
     def update_monsters(self) -> None:
         for monster in self.monster_list:
