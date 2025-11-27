@@ -5,6 +5,7 @@ import arcade
 
 from domain.models.action import Action
 from domain.models.environment import Environment
+from domain.models.position import Position
 from domain.models.reward import Reward
 from infrastructure.agent import Agent
 from infrastructure.arcade.settings import (
@@ -107,10 +108,20 @@ class Game(arcade.Window):
         self.qtable_text = arcade.Text(
             f"Q-Table Size: 0",
             10,
-            130,  # Position Y (au-dessus de Exploration qui est à 100)
+            130,
             arcade.color.WHITE,
             18,
         )
+
+        self.position_text = arcade.Text(
+            f"Pos: {self.agent.position}",
+            10,
+            160,
+            arcade.color.WHITE,
+            18,
+        )
+
+
         self.player_move_timer = 0.0
 
         arcade.set_background_color(arcade.color.DARK_BROWN)
@@ -285,6 +296,16 @@ class Game(arcade.Window):
     def qtable_text(self, text: arcade.Text) -> None:
         self.__qtable_text = text
 
+    def draw_grid(self) -> None:
+        """Dessine une grille pour visualiser les cases."""
+        for x in range(0, SCREEN_WIDTH + TILE_PIXEL_SIZE, TILE_PIXEL_SIZE):
+            arcade.draw_line(x, 0, x, SCREEN_HEIGHT, arcade.color.WHITE, 1)
+
+        for y in range(0, SCREEN_HEIGHT + TILE_PIXEL_SIZE, TILE_PIXEL_SIZE):
+            arcade.draw_line(0, y, SCREEN_WIDTH, y, arcade.color.WHITE, 1)
+
+
+
     def setup(self) -> None:
         print("\n=== LEVEL LOADING ===")
         self.key_count = 0
@@ -387,6 +408,8 @@ class Game(arcade.Window):
             f"{len(self.monster_list)} monsters, {len(self.door_list)} doors"
         )
 
+        self.agent.position = Position(3,2)
+
     def on_draw(self) -> None:
         self.clear()
         self.wall_list.draw()
@@ -400,6 +423,9 @@ class Game(arcade.Window):
         self.actions_text.draw()
         self.exploration_text.draw()
         self.qtable_text.draw()
+        self.position_text.draw()
+        self.draw_grid()
+
     def on_key_press(self, symbol: int, modifiers: int) -> None:
         if symbol == arcade.key.R:
             self.restart_game()
@@ -450,6 +476,7 @@ class Game(arcade.Window):
             self.actions_text.text = f"Actions: {self.action_count}"
             self.exploration_text.text = f"Exploration: {self.agent.exploration:.2f}"
             q_table_size = len(self.agent.q_table.table)
+            self.position_text.text = f"Pos: {self.agent.position}"
             self.qtable_text.text = f"States: {q_table_size}"
 
             if direction is Action.UP:
