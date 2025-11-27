@@ -13,6 +13,7 @@ class Environment:
     __goal: Position | None
     __width: int
     __height: int
+    __door: Position | None
 
     def __init__(self, map_layout: list[str]) -> None:
         self.__map = {}
@@ -21,6 +22,7 @@ class Environment:
         row, col = 0, 0
         self.__key = None
         self.__goal = None
+        self.__door = None
 
         for line in map_layout:
             for char in line:
@@ -30,6 +32,8 @@ class Environment:
                     self.__starting_position = pos
                 elif char == MAP_KEY:
                     self.__key = pos
+                elif char == MAP_DOOR:
+                    self.__door = pos
                 elif char == MAP_GOAL:
                     self.__goal = pos
 
@@ -62,6 +66,14 @@ class Environment:
     @key.setter
     def key(self, key: Position | None) -> None:
         self.__key = key
+
+    @property
+    def door(self) -> Position | None:
+        return self.__door
+
+    @door.setter
+    def door(self, door: Position | None) -> None:
+        self.__door = door
 
     @property
     def goal(self) -> Position | None:
@@ -127,6 +139,7 @@ class Environment:
                         reward = Reward.DOOR
                         pos = new_pos
                         self.__map[new_pos] = MAP_EMPTY
+
 
                     else:
                         reward = Reward.DOR_NO_KEY

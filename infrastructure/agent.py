@@ -14,6 +14,7 @@ class Agent:
     __q_table: QTable
     __position: Position
     __has_key: bool
+    __has_door: bool
     __score: int
     __has_finished_episode: bool
     __reward: int
@@ -27,6 +28,7 @@ class Agent:
         self.q_table = QTable(initial_quality=0.0)
         self.position = self.environment.starting_position
         self.has_key = False
+        self.has_door = False
         self.score = 0
         self.has_finished_episode = False
         self.reward = 0
@@ -65,6 +67,14 @@ class Agent:
     @has_key.setter
     def has_key(self, value: bool) -> None:
         self.__has_key = value
+
+    @property
+    def has_door(self) -> bool:
+        return self.__has_door
+
+    @has_door.setter
+    def has_door(self, value: bool) -> None:
+        self.__has_door = value
 
     @property
     def score(self) -> int:
@@ -117,6 +127,7 @@ class Agent:
     def reset(self) -> None:
         self.position = self.environment.starting_position
         self.has_key = False
+        self.has_door = False
         self.score = 0
         self.has_finished_episode = False
         self.reward = 0
@@ -142,26 +153,49 @@ class Agent:
 
         return Radar(radar_3x3)
 
+    def calcule_distance(self, but: Position, pos: Position) -> tuple[int, int]:
+        row = abs(but.row - pos.row)
+        col = abs(but.column - pos.column)
+
+        return (row, col)
+
+    def dynamic_goal(self) -> Position:
+        if self.has_key and self.has_door is False:
+
+            return self.environment.door
+
+        elif self.has_door:
+            return self.environment.goal
+
+        else:
+            return self.environment.key
+
+    def get_state_key(self) -> tuple:
+
+        radar_matrix = self.radar.view
+
+        data = tuple(item for row in radar_matrix for item in row)
+        goal_pos = self.dynamic_goal()
+        delta_raw, deta_column = self.calcule_distance(goal_pos, self.position)
+        return (
+
+            delta_raw,
+            deta_column,
+            self.has_key,
+            tuple(data)
+        )
+
     def execute_action_and_learn_from_reward(
             self,
             action: Action,
             learning_rate: float = 0.3,
             discount_factor: float = 0.9
     ) -> None:
+        # current state/postion
         self.radar = self.scan_area()
-        current_position: Position = self.position
-
-        next_position, reward = self.environment.do(current_position, action, self.has_key)
-
-        old_quality: float = self.q_table.get_quality(current_position, action)
-
-        best_next_action: Action = self.q_table.choose_best_action(next_position)
-        max_next_quality: float = self.q_table.get_quality(next_position, best_next_action)
-
-        updated_quality: float = old_quality + learning_rate * (
-                reward + discount_factor * max_next_quality - old_quality)
-
-        self.q_table.set_quality(current_position, action, updated_quality)
+        current_state_key = self.get_state_key()
+        next_position, reward = self.environment.do(self.position, action, self.has_key)
+        # update notre postion
 
         self.position = next_position
         self.reward = reward
@@ -172,9 +206,23 @@ class Agent:
             self.has_key = True
         elif reward == Reward.DOOR:
             self.has_key = False
+            self.has_door = True
 
         if reward == Reward.GOAL or reward == Reward.MONSTER:
             self.has_finished_episode = True
+        # calcule de la new valeur de Q table
+
+        next_state_key = self.get_state_key()
+
+        old_quality: float = self.q_table.get_quality(current_state_key, action)
+
+        best_next_action: Action = self.q_table.choose_best_action(next_state_key)
+        max_next_quality: float = self.q_table.get_quality(next_state_key, best_next_action)
+
+        updated_quality: float = old_quality + learning_rate * (
+                reward + discount_factor * max_next_quality - old_quality)
+
+        self.q_table.set_quality(current_state_key, action, updated_quality)
 
     def choose_action_from_knowledge_or_random(self) -> Action:
         '''
@@ -190,7 +238,9 @@ class Agent:
         return self.choose_best_action()
 
     def choose_best_action(self) -> Action:
-        return self.q_table.choose_best_action(self.position)
+        self.radar = self.scan_area()
+        current_state_key = self.get_state_key()
+        return self.q_table.choose_best_action(current_state_key)
 
     def run_episode(
             self,

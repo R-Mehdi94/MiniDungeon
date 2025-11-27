@@ -42,6 +42,6 @@ class Position:
         if not isinstance(other, Position):
             return NotImplemented
         return (
-            self.__row == other.row
-            and self.__column == other.column
+                self.__row == other.row
+                and self.__column == other.column
         )
