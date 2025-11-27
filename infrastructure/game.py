@@ -104,6 +104,13 @@ class Game(arcade.Window):
             18,
         )
 
+        self.qtable_text = arcade.Text(
+            f"Q-Table Size: 0",
+            10,
+            130,  # Position Y (au-dessus de Exploration qui est à 100)
+            arcade.color.WHITE,
+            18,
+        )
         self.player_move_timer = 0.0
 
         arcade.set_background_color(arcade.color.DARK_BROWN)
@@ -392,8 +399,7 @@ class Game(arcade.Window):
         self.score_text.draw()
         self.actions_text.draw()
         self.exploration_text.draw()
-        #self.qtable_text.draw()
-
+        self.qtable_text.draw()
     def on_key_press(self, symbol: int, modifiers: int) -> None:
         if symbol == arcade.key.R:
             self.restart_game()
@@ -432,18 +438,19 @@ class Game(arcade.Window):
         self.player_move_timer -= delta_time
 
         if self.player_move_timer <= 0:
-            self.player_move_timer = random.uniform(0.1, 0.4)
-
-            if(self.agent.exploration > 0):
-                self.agent.exploration -= 0.02
+            self.player_move_timer = random.uniform(0.0, 0.01)
 
             direction: Action = self.agent.choose_action_from_knowledge_or_random()
+
+            self.agent.execute_action_and_learn_from_reward(direction)
 
             self.action_count += 1
             self.agent.score += Reward.STEP
             self.score_text.text = f"Score: {self.agent.score}"
             self.actions_text.text = f"Actions: {self.action_count}"
             self.exploration_text.text = f"Exploration: {self.agent.exploration:.2f}"
+            q_table_size = len(self.agent.q_table.table)
+            self.qtable_text.text = f"States: {q_table_size}"
 
             if direction is Action.UP:
                 self.player_sprite.change_y = PLAYER_MOVEMENT_SPEED

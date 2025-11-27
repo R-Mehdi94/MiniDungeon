@@ -18,8 +18,8 @@ class Agent:
     __has_finished_episode: bool
     __reward: int
     __iterations_count: int
-    __exploration: float = 0
-
+    __exploration: float
+    __radar: Radar
     def __init__(self, env: Environment) -> None:
         self.environment = env
         self.q_table = QTable(initial_quality=0.0)
@@ -29,6 +29,8 @@ class Agent:
         self.has_finished_episode = False
         self.reward = 0
         self.iterations_count = 0
+        self.exploration = 0
+        self.radar = Radar([])
 
     @property
     def environment(self) -> Environment:
@@ -98,6 +100,15 @@ class Agent:
     def exploration(self, value: float) -> None:
         self.__exploration = value
 
+    @property
+    def radar(self) -> Radar:
+        return self.__radar
+
+    @radar.setter
+    def radar(self, value: Radar) -> None:
+        self.__radar = value
+
+
     @iterations_count.setter
     def iterations_count(self, value: int) -> None:
         self.__iterations_count = value
@@ -135,7 +146,8 @@ class Agent:
         action: Action,
         learning_rate: float = 1.0,
         discount_factor: float = 1.0
-    ) -> Radar:
+    ) -> None:
+        self.radar = self.scan_area()
         current_position: Position = self.position
 
         next_position, reward = self.environment.do(current_position, action)
@@ -160,8 +172,6 @@ class Agent:
         if reward == Reward.GOAL or reward == Reward.MONSTER:
             self.has_finished_episode = True
 
-        radar: Radar = self.scan_area()
-        return radar
 
     def choose_action_from_knowledge_or_random(self) -> Action:
         '''
@@ -173,6 +183,7 @@ class Agent:
         '''
         if random.random() < self.exploration:
             return choice(list(Action))
+        self.exploration *= .99
         return self.choose_best_action()
 
     def choose_best_action(self) -> Action:
