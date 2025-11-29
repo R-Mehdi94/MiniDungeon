@@ -6,8 +6,8 @@ from typing import List
 MAP_TRAINING_2: List[str] = [
     '#############',
     '#P    #  T  #',
-    '#     #  #  #',
+    '#M    #  #  #',
     '#  K  D  #  #',
-    '#     #   M #',
+    '#   M #     #',
     '#############',
 ]

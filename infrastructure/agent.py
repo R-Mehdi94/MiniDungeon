@@ -147,28 +147,18 @@ class Agent:
         self.iterations_count = 0
 
     def scan_area(self) -> Radar:
-        def content_at(delta_row: int, delta_col: int) -> CellContent:
-            target = Position(
-                self.position.row + delta_row,
-                self.position.column + delta_col
-            )
-            return self.environment.get_cell_content(target)
 
-        radar_3x3 = []
-        for row_offset in range(-1, 2):
-            row_data = []
-            for col_offset in range(-1, 2):
-                content = content_at(row_offset, col_offset)
-                row_data.append(content)
-            radar_3x3.append(row_data)
+        surroundings_tuple = self.scan_surroundings()
 
-        return Radar(radar_3x3)
+        return Radar(surroundings_tuple)
 
     def calcule_distance(self, but: Position, pos: Position) -> tuple[int, int]:
         row = but.row - pos.row
         col = but.column - pos.column
 
         return (row, col)
+
+
 
     def dynamic_goal(self) -> Position:
         if self.has_key and self.has_door is False:
@@ -181,32 +171,80 @@ class Agent:
         else:
             return self.environment.key
 
+    def get_cell_type(self, row_offset: int, col_offset: int) -> int:
+        """
+        Analyse une case voisine et renvoie son code simplifié :
+        0 = Libre (Vide, Clé, Goal, Porte ouverte)
+        1 = Bloqué (Mur, Porte fermée)
+        2 = Danger (Monstre)
+        """
+        target = Position(
+            self.position.row + row_offset,
+            self.position.column + col_offset
+        )
+        content = self.environment.get_cell_content(target)
+
+        if content == CellContent.MONSTER:
+            return 2
+
+        if content == CellContent.WALL:
+            return 1
+        if content == CellContent.DOOR and not self.has_key:
+            return 1
+
+        return 0
+
+    def scan_surroundings(self) -> tuple:
+        surroundings = []
+
+        offsets = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+
+        for d_row, d_col in offsets:
+            cell_code = self.get_cell_type(d_row, d_col)
+            surroundings.append(cell_code)
+
+        return tuple(surroundings)
+
+
+    def get_direction_sign(self, val: int) -> int:
+        """
+        1  = C'est positif (vers le Bas ou la Droite)
+        -1 = C'est négatif (vers le Haut ou la Gauche)
+        0  = C'est nul (on est aligné)
+        """
+        if val > 0: return 1
+        if val < 0: return -1
+        return 0
+
     def get_state_key(self) -> tuple:
 
-        radar_matrix = self.radar.view
-
-        data = tuple(item for row in radar_matrix for item in row)
         goal_pos = self.dynamic_goal()
-        delta_raw, deta_column = self.calcule_distance(goal_pos, self.position)
-        return (
 
-            delta_raw,
-            deta_column,
-            self.has_key,
-            tuple(data)
+        d_row = self.get_direction_sign(goal_pos.row - self.position.row)
+
+        d_col = self.get_direction_sign(goal_pos.column - self.position.column)
+
+        radar = self.scan_surroundings()
+
+        return (
+            d_row,
+            d_col,
+            radar,
+            self.has_key
         )
 
     def execute_action_and_learn_from_reward(
             self,
             action: Action,
-            learning_rate: float = 0.3,
+            learning_rate: float = 0.6,
             discount_factor: float = 0.9
     ) -> None:
-        # current state/postion
-        self.radar = self.scan_area()
+
         current_state_key = self.get_state_key()
+
+        self.radar = self.scan_area()
+
         next_position, reward = self.environment.do(self.position, action, self.has_key)
-        # update notre postion
 
         self.position = next_position
         self.reward = reward
@@ -221,7 +259,6 @@ class Agent:
 
         if reward == Reward.GOAL or reward == Reward.MONSTER:
             self.has_finished_episode = True
-        # calcule de la new valeur de Q table
 
         next_state_key = self.get_state_key()
 
@@ -231,9 +268,17 @@ class Agent:
         max_next_quality: float = self.q_table.get_quality(next_state_key, best_next_action)
 
         updated_quality: float = old_quality + learning_rate * (
-                reward + discount_factor * max_next_quality - old_quality)
+                reward + discount_factor * max_next_quality - old_quality
+        )
 
         self.q_table.set_quality(current_state_key, action, updated_quality)
+
+    def choose_best_action(self) -> Action:
+        current_state_key = self.get_state_key()
+
+        self.radar = self.scan_area()
+
+        return self.q_table.choose_best_action(current_state_key)
 
     def choose_action_from_knowledge_or_random(self) -> Action:
         '''
@@ -248,10 +293,7 @@ class Agent:
         self.exploration *= .99
         return self.choose_best_action()
 
-    def choose_best_action(self) -> Action:
-        self.radar = self.scan_area()
-        current_state_key = self.get_state_key()
-        return self.q_table.choose_best_action(current_state_key)
+
 
     def run_episode(
             self,
