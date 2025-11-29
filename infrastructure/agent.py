@@ -147,7 +147,6 @@ class Agent:
         self.iterations_count = 0
 
     def scan_area(self) -> Radar:
-
         def content_at(delta_row: int, delta_col: int) -> CellContent:
             target = Position(
                 self.position.row + delta_row,
@@ -156,19 +155,18 @@ class Agent:
             return self.environment.get_cell_content(target)
 
         radar_3x3 = []
-
-        for row in range(3):
+        for row_offset in range(-1, 2):
             row_data = []
-            for col in range(3):
-                content = content_at(row, col)
+            for col_offset in range(-1, 2):
+                content = content_at(row_offset, col_offset)
                 row_data.append(content)
-                radar_3x3.append(row_data)
+            radar_3x3.append(row_data)
 
         return Radar(radar_3x3)
 
     def calcule_distance(self, but: Position, pos: Position) -> tuple[int, int]:
-        row = abs(but.row - pos.row)
-        col = abs(but.column - pos.column)
+        row = but.row - pos.row
+        col = but.column - pos.column
 
         return (row, col)
 

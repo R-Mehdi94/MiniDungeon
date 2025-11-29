@@ -101,12 +101,9 @@ class Environment:
 
     def get_cell_content(self, position: Position) -> CellContent:
         char = self.__map.get(position)
-        if char is None:
-            return CellContent.OUT_OF_MAP
+
         if char == MAP_WALL:
             return CellContent.WALL
-        if char == MAP_START:
-            return CellContent.START
         if char == MAP_KEY:
             return CellContent.KEY
         if char == MAP_GOAL:

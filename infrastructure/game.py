@@ -448,7 +448,6 @@ class Game(arcade.Window):
         pass
 
     def on_update(self, delta_time: float) -> None:
-        global new_x, new_y
         if self.victory:
             return
 
@@ -458,61 +457,57 @@ class Game(arcade.Window):
             self.player_move_timer = random.uniform(0.0, 0.0)
 
             direction: Action = self.agent.choose_action_from_knowledge_or_random()
-
             self.agent.execute_action_and_learn_from_reward(direction)
 
             self.action_count += 1
-
             self.score_text.text = f"Score: {self.agent.score}"
             self.actions_text.text = f"Actions: {self.action_count}"
             self.exploration_text.text = f"Exploration: {self.agent.exploration:.2f}"
             q_table_size = len(self.agent.q_table.table)
             self.position_text.text = f"Pos: {self.agent.position}"
             self.qtable_text.text = f"States: {q_table_size}"
+
             new_y = self.agent.position.row
             new_x = self.agent.position.column
 
             X = new_x * TILE_PIXEL_SIZE + TILE_PIXEL_SIZE / 2
             Y = ((MAP_HEIGHT_TILES - 1 - new_y) * TILE_PIXEL_SIZE + TILE_PIXEL_SIZE / 2)
 
-            self.player_sprite.center_y = Y
             self.player_sprite.center_x = X
+            self.player_sprite.center_y = Y
+
+            key_hit_list = arcade.check_for_collision_with_list(
+                self.player_sprite,
+                self.key_list,
+            )
+            for key in key_hit_list:
+                key.remove_from_sprite_lists()
+                self.key_count += 1
+                self.key_text.text = f"Keys: {self.key_count}"
+                print(f"KEY COLLECTED! TOTAL: {self.key_count}")
+
+            door_hit_list = arcade.check_for_collision_with_list(
+                self.player_sprite,
+                self.door_list,
+            )
+            for door in door_hit_list:
+                if self.key_count > 0:
+                    self.key_count -= 1
+                    self.key_text.text = f"Keys: {self.key_count}"
+                    door.remove_from_sprite_lists()
+                else:
+                    pass
 
         self.physics_engine.update()
+
         self.update_monsters()
-        self.action_count = self.agent.iterations_count
-
-        key_hit_list = arcade.check_for_collision_with_list(
-            self.player_sprite,
-            self.key_list,
-        )
-
-        for key in key_hit_list:
-            key.remove_from_sprite_lists()
-
-            self.key_text.text = f"Keys: {self.key_count}"
-            self.score_text.text = f"Score: {self.agent.score}"
-            print(f"KEY COLLECTED! TOTAL: {self.key_count}")
-
-        door_hit_list = arcade.check_for_collision_with_list(
-            self.player_sprite,
-            self.door_list,
-        )
-        for door in door_hit_list:
-            door.remove_from_sprite_lists()
-
-            # self.go_to_next_level()
 
         monster_hit_list = arcade.check_for_collision_with_list(
             self.player_sprite,
             self.monster_list,
         )
         if len(monster_hit_list) > 0:
-            self.score_text.text = f"Score: {self.agent.score}"
-            print(
-                f"GAME OVER - SCORE: {self.agent.score} - "
-                f"ACTIONS: {self.action_count}"
-            )
+            print(f"GAME OVER")
             self.setup()
 
         treasure_hit_list = arcade.check_for_collision_with_list(
@@ -520,13 +515,7 @@ class Game(arcade.Window):
             self.treasure_list,
         )
         if len(treasure_hit_list) > 0:
-            self.score_text.text = f"Score: {self.agent.score}"
-            print(
-                "VICTORY YOU HAVE FOUND THE TREASURE!\n"
-                f"FINAL SCORE: {self.agent.score} - "
-                f"ACTIONS: {self.action_count}\n"
-                "PRESS R TO RESTART"
-            )
+            print("VICTORY")
             self.victory = True
 
     def update_monsters(self) -> None:

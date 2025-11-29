@@ -2,11 +2,11 @@ from enum import IntEnum
 
 
 class Reward(IntEnum):
-    STEP = -5
-    WALL = -10
+    STEP = -1
+    WALL = -3
     OUT_OF_MAP = -10
-    KEY = 200
-    MONSTER = - 50
+    KEY = 40
+    MONSTER = - 20
     DOR_NO_KEY = -20
-    DOOR = 300
-    GOAL = 100000
+    DOOR = 60
+    GOAL = 100
