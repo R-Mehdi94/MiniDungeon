@@ -5,6 +5,7 @@ import arcade
 from domain.models.action import Action
 from domain.models.environment import Environment
 from domain.models.position import Position
+from domain.models.reward import Reward
 from infrastructure.agent import Agent
 from infrastructure.arcade.settings import (
     GLOBAL_SCALING,
@@ -451,18 +452,34 @@ class Game(arcade.Window):
         if self.victory:
             return
 
+        self.update_monsters()
+
+        current_monster_positions = []
+
+        for monster in self.monster_list:
+            col = int(monster.center_x // TILE_PIXEL_SIZE)
+
+            row = int((SCREEN_HEIGHT - monster.center_y) // TILE_PIXEL_SIZE)
+
+            if 0 <= row < MAP_HEIGHT_TILES:
+                current_monster_positions.append(Position(row, col))
+
+        self.agent.environment.update_monster_positions(current_monster_positions)
+
+
         self.player_move_timer -= delta_time
 
         if self.player_move_timer <= 0:
             self.player_move_timer = random.uniform(0.0, 0.0)
 
             direction: Action = self.agent.choose_action_from_knowledge_or_random()
+
             self.agent.execute_action_and_learn_from_reward(direction)
 
             self.action_count += 1
             self.score_text.text = f"Score: {self.agent.score}"
             self.actions_text.text = f"Actions: {self.action_count}"
-            self.exploration_text.text = f"Exploration: {self.agent.exploration:.2f}"
+            self.exploration_text.text = f"Exploration: {self.agent.exploration:.3f}"
             q_table_size = len(self.agent.q_table.table)
             self.position_text.text = f"Pos: {self.agent.position}"
             self.qtable_text.text = f"States: {q_table_size}"
@@ -475,6 +492,7 @@ class Game(arcade.Window):
 
             self.player_sprite.center_x = X
             self.player_sprite.center_y = Y
+
 
             key_hit_list = arcade.check_for_collision_with_list(
                 self.player_sprite,
@@ -495,19 +513,24 @@ class Game(arcade.Window):
                     self.key_count -= 1
                     self.key_text.text = f"Keys: {self.key_count}"
                     door.remove_from_sprite_lists()
+                    print("DOOR OPENED!")
                 else:
                     pass
 
         self.physics_engine.update()
-
-        self.update_monsters()
 
         monster_hit_list = arcade.check_for_collision_with_list(
             self.player_sprite,
             self.monster_list,
         )
         if len(monster_hit_list) > 0:
-            print(f"GAME OVER")
+
+            if self.agent.reward != Reward.MONSTER:
+                print("COLLISION PHYSIQUE ! Application de la punition...")
+                self.agent.score += Reward.MONSTER
+
+            print(f"GAME OVER - Score Final: {self.agent.score}")
+
             self.setup()
 
         treasure_hit_list = arcade.check_for_collision_with_list(
@@ -515,7 +538,7 @@ class Game(arcade.Window):
             self.treasure_list,
         )
         if len(treasure_hit_list) > 0:
-            print("VICTORY")
+            print(f"VICTORY - Score Final: {self.agent.score}")
             self.victory = True
 
     def update_monsters(self) -> None:

@@ -14,10 +14,11 @@ class Environment:
     __width: int
     __height: int
     __door: Position | None
-
+    __monster_positions: list[Position]
     def __init__(self, map_layout: list[str]) -> None:
         self.__map = {}
         row: int
+        self.__monster_positions = []
         col: int
         row, col = 0, 0
         self.__key = None
@@ -27,7 +28,12 @@ class Environment:
         for line in map_layout:
             for char in line:
                 pos = Position(row, col)
-                self.__map[pos] = char
+
+                if char == MAP_MONSTER:
+                    self.__map[pos] = MAP_EMPTY
+                else:
+                    self.__map[pos] = char
+
                 if char == MAP_START:
                     self.__starting_position = pos
                 elif char == MAP_KEY:
@@ -99,7 +105,15 @@ class Environment:
     def height(self, height: int) -> None:
         self.__height = height
 
+    def update_monster_positions(self, positions: list[Position]) -> None:
+        self.__monster_positions = positions
+
     def get_cell_content(self, position: Position) -> CellContent:
+
+        if position in self.__monster_positions:
+            return CellContent.MONSTER
+
+
         char = self.__map.get(position)
 
         if char == MAP_WALL:
@@ -110,13 +124,14 @@ class Environment:
             return CellContent.TREASURE
         if char == MAP_DOOR:
             return CellContent.DOOR
-        if char == MAP_MONSTER:
-            return CellContent.MONSTER
         return CellContent.EMPTY
 
     def do(self, pos: Position, action: Action, has_key: bool) -> tuple[Position, int]:
         movement: Movement = action.to_movement()
         new_pos: Position = pos.calculate_next_position(movement)
+
+        if new_pos in self.__monster_positions:
+            return new_pos, Reward.MONSTER
 
         reward: int
         if new_pos in self.__map:
@@ -144,9 +159,7 @@ class Environment:
                 elif cell == MAP_GOAL:
                     reward = Reward.GOAL
                     pos = new_pos
-                elif cell == MAP_MONSTER:
-                    reward = Reward.MONSTER
-                    pos = new_pos
+
                 else:
                     reward = Reward.STEP
                     pos = new_pos

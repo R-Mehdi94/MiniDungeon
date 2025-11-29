@@ -23,6 +23,8 @@ class Agent:
     __exploration: float
     __history: list
     __radar: Radar
+    __previous_state: tuple | None
+    __previous_action: Action | None
 
     def __init__(self, env: Environment) -> None:
 
@@ -38,6 +40,11 @@ class Agent:
         self.exploration = 0
         self.history = []
         self.radar = Radar([])
+        self.__last_state_key = None
+        self.__last_action = None
+
+        self.__previous_state = None
+        self.__previous_action = None
 
     @property
     def environment(self) -> Environment:
@@ -233,6 +240,7 @@ class Agent:
             self.has_key
         )
 
+
     def execute_action_and_learn_from_reward(
             self,
             action: Action,
@@ -241,6 +249,9 @@ class Agent:
     ) -> None:
 
         current_state_key = self.get_state_key()
+
+        self.__previous_state = current_state_key
+        self.__previous_action = action
 
         self.radar = self.scan_area()
 
@@ -272,6 +283,20 @@ class Agent:
         )
 
         self.q_table.set_quality(current_state_key, action, updated_quality)
+
+    def punish_last_action(self, punishment: int, learning_rate: float = 0.5) -> None:
+        """
+        Appelée par le jeu si on meurt APRES le tour de l'IA (collision physique).
+        On modifie la valeur de la dernière action pour dire "C'était mortel".
+        """
+        if self.__previous_state is not None and self.__previous_action is not None:
+            old_q = self.q_table.get_quality(self.__previous_state, self.__previous_action)
+
+            # On écrase la valeur précédente vers la punition (-50)
+            new_q = old_q + learning_rate * (punishment - old_q)
+
+            self.q_table.set_quality(self.__previous_state, self.__previous_action, new_q)
+
 
     def choose_best_action(self) -> Action:
         current_state_key = self.get_state_key()
