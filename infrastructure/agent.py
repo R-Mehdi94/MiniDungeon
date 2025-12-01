@@ -136,7 +136,7 @@ class Agent:
             delta_treasure_pos_row = 0
             delta_treasure_pos_col = 0
 
-        return delta_key_pos_row, delta_key_pos_col, delta_door_pos_row, delta_door_pos_col, delta_treasure_pos_row, delta_treasure_pos_col
+        return (delta_key_pos_row, delta_key_pos_col), (delta_door_pos_row, delta_door_pos_col), (delta_treasure_pos_row, delta_treasure_pos_col)
 
 
 
@@ -160,8 +160,8 @@ class Agent:
 
         current_state_key = self.get_state_key()
 
-        self.__previous_state = current_state_key
-        self.__previous_action = action
+        #self.__previous_state = current_state_key
+        #self.__previous_action = action
 
         self.radar = self.scan_area()
 

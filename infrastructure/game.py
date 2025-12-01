@@ -346,7 +346,7 @@ class Game(arcade.Window):
                     )
                     door.center_x = x
                     door.center_y = y
-                    self.door_pos = Position(row_index,col_index)
+                    self.agent.door_pos = Position(row_index,col_index)
                     self.door_list.append(door)
 
                 elif char == "M":
@@ -366,7 +366,7 @@ class Game(arcade.Window):
                     )
                     treasure.center_x = x
                     treasure.center_y = y
-                    self.treasure_pos = Position(row_index,col_index)
+                    self.agent.treasure_pos = Position(row_index,col_index)
                     self.treasure_list.append(treasure)
 
         if not player_found:
