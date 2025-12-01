@@ -11,139 +11,35 @@ from domain.models.position import Position
 
 
 class Agent:
-    __environment: Environment
-    __q_table: QTable
-    __position: Position
-    __has_key: bool
-    __has_door: bool
-    __score: int
-    __has_finished_episode: bool
-    __reward: int
-    __iterations_count: int
-    __exploration: float
-    __history: list
-    __radar: Radar
-    __previous_state: tuple | None
-    __previous_action: Action | None
+
 
     def __init__(self, env: Environment) -> None:
-
         self.environment = env
         self.q_table = QTable(initial_quality=0.0)
         self.position = self.environment.starting_position
+
+        # États du jeu
         self.has_key = False
         self.has_door = False
         self.score = 0
         self.has_finished_episode = False
+        self.key_pos = None
+        self.door_pos = None
+        self.treasure_pos = None
+
+        # Apprentissage
         self.reward = 0
         self.iterations_count = 0
-        self.exploration = 0
+        self.exploration = 0.0  # Float
         self.history = []
         self.radar = Radar([])
-        self.__last_state_key = None
-        self.__last_action = None
 
-        self.__previous_state = None
-        self.__previous_action = None
-
-    @property
-    def environment(self) -> Environment:
-        return self.__environment
-
-    @environment.setter
-    def environment(self, value: Environment) -> None:
-        self.__environment = value
-
-    @property
-    def q_table(self) -> QTable:
-        return self.__q_table
-
-    @q_table.setter
-    def q_table(self, value: QTable) -> None:
-        self.__q_table = value
-
-    @property
-    def position(self) -> Position:
-        return self.__position
-
-    @position.setter
-    def position(self, value: Position) -> None:
-        self.__position = value
-
-    @property
-    def has_key(self) -> bool:
-        return self.__has_key
-
-    @has_key.setter
-    def has_key(self, value: bool) -> None:
-        self.__has_key = value
-
-    @property
-    def has_door(self) -> bool:
-        return self.__has_door
-
-    @has_door.setter
-    def has_door(self, value: bool) -> None:
-        self.__has_door = value
-
-    @property
-    def score(self) -> int:
-        return self.__score
-
-    @score.setter
-    def score(self, value: int) -> None:
-        self.__score = value
-
-    @property
-    def has_finished_episode(self) -> bool:
-        return self.__has_finished_episode
-
-    @has_finished_episode.setter
-    def has_finished_episode(self, value: bool) -> None:
-        self.__has_finished_episode = value
-
-    @property
-    def reward(self) -> int:
-        return self.__reward
-
-    @reward.setter
-    def reward(self, value: int) -> None:
-        self.__reward = value
-
-    @property
-    def iterations_count(self) -> int:
-        return self.__iterations_count
-
-    @property
-    def exploration(self) -> float:
-        return self.__exploration
-
-    @exploration.setter
-    def exploration(self, value: float) -> None:
-        self.__exploration = value
-
-    @property
-    def history(self) -> list:
-        return self.__history
-
-    @history.setter
-    def history(self, value: list) -> None:
-        self.__history = value
-
-    @property
-    def radar(self) -> Radar:
-        return self.__radar
-
-    @radar.setter
-    def radar(self, value: Radar) -> None:
-        self.__radar = value
-
-    @iterations_count.setter
-    def iterations_count(self, value: int) -> None:
-        self.__iterations_count = value
+        # Mémoire pour l'algo RL
+        self.previous_state = None
+        self.previous_action = None
 
     def reset(self) -> None:
-        if self.score != None:
+        if self.score is not None:
             self.history.append(self.score)
         self.position = self.environment.starting_position
         self.has_key = False
@@ -164,8 +60,6 @@ class Agent:
         col = but.column - pos.column
 
         return (row, col)
-
-
 
     def dynamic_goal(self) -> Position:
         if self.has_key and self.has_door is False:
@@ -212,7 +106,6 @@ class Agent:
 
         return tuple(surroundings)
 
-
     def get_direction_sign(self, val: int) -> int:
         """
         1  = C'est positif (vers le Bas ou la Droite)
@@ -223,23 +116,40 @@ class Agent:
         if val < 0: return -1
         return 0
 
+    def get_state(self):
+        if self.key_pos:
+            delta_key_pos_row = self.get_direction_sign(self.key_pos.row - self.position.row)
+            delta_key_pos_col = self.get_direction_sign(self.key_pos.column - self.position.column)
+        else:
+            delta_key_pos_row = 0
+            delta_key_pos_col = 0
+        if self.treasure_pos:
+            delta_door_pos_row = self.get_direction_sign(self.door_pos.row - self.position.row)
+            delta_door_pos_col = self.get_direction_sign(self.door_pos.column  - self.position.column)
+        else:
+            delta_door_pos_row = 0
+            delta_door_pos_col = 0
+        if self.treasure_pos:
+            delta_treasure_pos_row = self.get_direction_sign(self.treasure_pos.row - self.position.row)
+            delta_treasure_pos_col = self.get_direction_sign(self.treasure_pos.column  - self.position.column)
+        else:
+            delta_treasure_pos_row = 0
+            delta_treasure_pos_col = 0
+
+        return delta_key_pos_row, delta_key_pos_col, delta_door_pos_row, delta_door_pos_col, delta_treasure_pos_row, delta_treasure_pos_col
+
+
+
     def get_state_key(self) -> tuple:
-
-        goal_pos = self.dynamic_goal()
-
-        d_row = self.get_direction_sign(goal_pos.row - self.position.row)
-
-        d_col = self.get_direction_sign(goal_pos.column - self.position.column)
 
         radar = self.scan_surroundings()
 
-        return (
-            d_row,
-            d_col,
-            radar,
-            self.has_key
-        )
+        state = self.get_state()
 
+        test = radar,state,self.has_key
+        print(test)
+
+        return test
 
     def execute_action_and_learn_from_reward(
             self,
@@ -297,7 +207,6 @@ class Agent:
 
             self.q_table.set_quality(self.__previous_state, self.__previous_action, new_q)
 
-
     def choose_best_action(self) -> Action:
         current_state_key = self.get_state_key()
 
@@ -317,8 +226,6 @@ class Agent:
             return choice(list(Action))
         self.exploration *= .99
         return self.choose_best_action()
-
-
 
     def run_episode(
             self,

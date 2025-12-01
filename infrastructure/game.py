@@ -20,29 +20,6 @@ from infrastructure.monster import Monster
 
 
 class Game(arcade.Window):
-    __agent: Agent
-    __wall_list: arcade.SpriteList[arcade.Sprite]
-    __player_list: arcade.SpriteList[arcade.Sprite]
-    __key_list: arcade.SpriteList[arcade.Sprite]
-    __door_list: arcade.SpriteList[arcade.Sprite]
-    __monster_list: arcade.SpriteList[Monster]
-    __treasure_list: arcade.SpriteList[arcade.Sprite]
-    __player_sprite: arcade.Sprite
-    __physics_engine: arcade.PhysicsEngineSimple
-    __key_count: int
-    __key_text: arcade.Text
-    __player_move_timer: float
-
-    __score_text: arcade.Text
-    __action_count: int
-    __actions_text: arcade.Text
-    __exploration_text: arcade.Text
-    __qtable_text: arcade.SpriteList[arcade.Sprite]
-
-    __maps: list[list[str]]
-    __current_level_index: int
-    __current_map: list[str]
-    __victory: bool
 
 
     def __init__(self, agent: Agent, maps: list[list[str]]) -> None:
@@ -60,7 +37,9 @@ class Game(arcade.Window):
         self.door_list = arcade.SpriteList()
         self.monster_list = arcade.SpriteList()
         self.treasure_list = arcade.SpriteList()
-
+        self.key_pos = None
+        self.door_pos = None
+        self.treasure_pos = None
         self.player_sprite = arcade.Sprite(
             ":resources:images/tiles/boxCrate_double.png",
             GLOBAL_SCALING,
@@ -324,9 +303,7 @@ class Game(arcade.Window):
         for row_index, row in enumerate(self.current_map):
             for col_index, char in enumerate(row):
                 x: float = col_index * TILE_PIXEL_SIZE + TILE_PIXEL_SIZE / 2
-                y: float = (
-                        (MAP_HEIGHT_TILES - 1 - row_index) * TILE_PIXEL_SIZE
-                        + TILE_PIXEL_SIZE / 2
+                y: float = ((MAP_HEIGHT_TILES - 1 - row_index) * TILE_PIXEL_SIZE+ TILE_PIXEL_SIZE / 2
                 )
 
                 if char == "#":
@@ -347,6 +324,8 @@ class Game(arcade.Window):
                     self.player_sprite.center_x = x
                     self.player_sprite.center_y = y
                     self.player_list.append(self.player_sprite)
+                    start_pos = Position(row_index, col_index)
+                    self.agent.position = start_pos
                     player_found = True
                     print(f"PLAYER STARTING POSITION: ({x:.0f}, {y:.0f})")
 
@@ -357,6 +336,7 @@ class Game(arcade.Window):
                     )
                     key.center_x = x
                     key.center_y = y
+                    self.agent.key_pos = Position(row_index,col_index)
                     self.key_list.append(key)
 
                 elif char == "D":
@@ -366,6 +346,7 @@ class Game(arcade.Window):
                     )
                     door.center_x = x
                     door.center_y = y
+                    self.door_pos = Position(row_index,col_index)
                     self.door_list.append(door)
 
                 elif char == "M":
@@ -385,6 +366,7 @@ class Game(arcade.Window):
                     )
                     treasure.center_x = x
                     treasure.center_y = y
+                    self.treasure_pos = Position(row_index,col_index)
                     self.treasure_list.append(treasure)
 
         if not player_found:
@@ -419,7 +401,7 @@ class Game(arcade.Window):
         self.position_text.draw()
         self.draw_grid()
 
-    def on_key_press(self, symbol: int, modifiers: int) -> None:
+    def on_key_press(self, symbol: int, exploration: int) -> None:
         if symbol == arcade.key.R:
             self.restart_game()
         if symbol == arcade.key.E:
@@ -501,6 +483,7 @@ class Game(arcade.Window):
             for key in key_hit_list:
                 key.remove_from_sprite_lists()
                 self.key_count += 1
+                self.key_pos = None
                 self.key_text.text = f"Keys: {self.key_count}"
                 print(f"KEY COLLECTED! TOTAL: {self.key_count}")
 
@@ -511,6 +494,7 @@ class Game(arcade.Window):
             for door in door_hit_list:
                 if self.key_count > 0:
                     self.key_count -= 1
+                    self.door_pos = None
                     self.key_text.text = f"Keys: {self.key_count}"
                     door.remove_from_sprite_lists()
                     print("DOOR OPENED!")
