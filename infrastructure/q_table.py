@@ -1,6 +1,5 @@
 from domain.models.action import Action
 from domain.models.actions_qualities_for_state import ActionsQualitiesForState
-from domain.models.position import Position
 
 
 class QTable:

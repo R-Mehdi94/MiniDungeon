@@ -19,6 +19,15 @@ from infrastructure.arcade.settings import (
 from infrastructure.monster import Monster
 
 
+def draw_grid() -> None:
+    """Dessine une grille pour visualiser les cases."""
+    for x in range(0, SCREEN_WIDTH + TILE_PIXEL_SIZE, TILE_PIXEL_SIZE):
+        arcade.draw_line(x, 0, x, SCREEN_HEIGHT, arcade.color.WHITE, 1)
+
+    for y in range(0, SCREEN_HEIGHT + TILE_PIXEL_SIZE, TILE_PIXEL_SIZE):
+        arcade.draw_line(0, y, SCREEN_WIDTH, y, arcade.color.WHITE, 1)
+
+
 class Game(arcade.Window):
 
 
@@ -271,14 +280,6 @@ class Game(arcade.Window):
     def qtable_text(self, text: arcade.Text) -> None:
         self.__qtable_text = text
 
-    def draw_grid(self) -> None:
-        """Dessine une grille pour visualiser les cases."""
-        for x in range(0, SCREEN_WIDTH + TILE_PIXEL_SIZE, TILE_PIXEL_SIZE):
-            arcade.draw_line(x, 0, x, SCREEN_HEIGHT, arcade.color.WHITE, 1)
-
-        for y in range(0, SCREEN_HEIGHT + TILE_PIXEL_SIZE, TILE_PIXEL_SIZE):
-            arcade.draw_line(0, y, SCREEN_WIDTH, y, arcade.color.WHITE, 1)
-
     def setup(self) -> None:
         print("\n=== LEVEL LOADING ===")
         self.key_count = 0
@@ -383,7 +384,6 @@ class Game(arcade.Window):
             f"{len(self.monster_list)} monsters, {len(self.door_list)} doors"
         )
 
-        self.agent.position = Position(3, 2)
 
     def on_draw(self) -> None:
         self.clear()
@@ -399,7 +399,7 @@ class Game(arcade.Window):
         self.exploration_text.draw()
         self.qtable_text.draw()
         self.position_text.draw()
-        self.draw_grid()
+        draw_grid()
 
     def on_key_press(self, symbol: int, exploration: int) -> None:
         if symbol == arcade.key.R:
@@ -452,7 +452,7 @@ class Game(arcade.Window):
         self.player_move_timer -= delta_time
 
         if self.player_move_timer <= 0:
-            self.player_move_timer = random.uniform(0.0, 0.0)
+            self.player_move_timer = random.uniform(0.1, 0.2)
 
             direction: Action = self.agent.choose_action_from_knowledge_or_random()
 
@@ -469,11 +469,11 @@ class Game(arcade.Window):
             new_y = self.agent.position.row
             new_x = self.agent.position.column
 
-            X = new_x * TILE_PIXEL_SIZE + TILE_PIXEL_SIZE / 2
-            Y = ((MAP_HEIGHT_TILES - 1 - new_y) * TILE_PIXEL_SIZE + TILE_PIXEL_SIZE / 2)
+            x = new_x * TILE_PIXEL_SIZE + TILE_PIXEL_SIZE / 2
+            y = ((MAP_HEIGHT_TILES - 1 - new_y) * TILE_PIXEL_SIZE + TILE_PIXEL_SIZE / 2)
 
-            self.player_sprite.center_x = X
-            self.player_sprite.center_y = Y
+            self.player_sprite.center_x = x
+            self.player_sprite.center_y = y
 
 
             key_hit_list = arcade.check_for_collision_with_list(
@@ -515,7 +515,7 @@ class Game(arcade.Window):
 
             print(f"GAME OVER - Score Final: {self.agent.score}")
 
-            self.setup()
+            self.restart_game()
 
         treasure_hit_list = arcade.check_for_collision_with_list(
             self.player_sprite,

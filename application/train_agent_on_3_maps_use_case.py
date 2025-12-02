@@ -53,8 +53,8 @@ def train_agent_on_3_maps_use_case(
 
             cell_char: str = environment.map.get(pos, ' ')
 
-            if cell_char == MAP_KEY:
-                agent.has_key = True
+            #if cell_char == MAP_KEY:
+            #    agent.has_key = True
 
             if cell_char == 'D' and agent.has_key:
                 current_level += 1

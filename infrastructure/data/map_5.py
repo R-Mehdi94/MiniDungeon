@@ -1,12 +1,10 @@
 from typing import List
 
-from typing import List
-
 MAP_TRAINING_2: List[str] = [
-    '#############',
-    '#P    #     #',
-    '#     #  #  #',
-    '#  K  D  #T #',
+    '######K######',
+    '#P    #  T  #',
+    '#  M  #  #  #',
+    '#     D  #  #',
     '#     #     #',
     '#############',
 ]

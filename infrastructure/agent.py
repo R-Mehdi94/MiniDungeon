@@ -10,6 +10,17 @@ from infrastructure.q_table import QTable
 from domain.models.position import Position
 
 
+def get_direction_sign(val: int) -> int:
+    """
+    1  = C'est positif (vers le Bas ou la Droite)
+    -1 = C'est négatif (vers le Haut ou la Gauche)
+    0  = C'est nul (on est aligné)
+    """
+    if val > 0: return 1
+    if val < 0: return -1
+    return 0
+
+
 class Agent:
 
 
@@ -32,7 +43,7 @@ class Agent:
         self.iterations_count = 0
         self.exploration = 0.0  # Float
         self.history = []
-        self.radar = Radar([])
+        self.radar = None
 
         # Mémoire pour l'algo RL
         self.previous_state = None
@@ -55,11 +66,6 @@ class Agent:
 
         return Radar(surroundings_tuple)
 
-    def calcule_distance(self, but: Position, pos: Position) -> tuple[int, int]:
-        row = but.row - pos.row
-        col = but.column - pos.column
-
-        return (row, col)
 
     def dynamic_goal(self) -> Position:
         if self.has_key and self.has_door is False:
@@ -106,32 +112,22 @@ class Agent:
 
         return tuple(surroundings)
 
-    def get_direction_sign(self, val: int) -> int:
-        """
-        1  = C'est positif (vers le Bas ou la Droite)
-        -1 = C'est négatif (vers le Haut ou la Gauche)
-        0  = C'est nul (on est aligné)
-        """
-        if val > 0: return 1
-        if val < 0: return -1
-        return 0
-
     def get_state(self):
         if self.key_pos:
-            delta_key_pos_row = self.get_direction_sign(self.key_pos.row - self.position.row)
-            delta_key_pos_col = self.get_direction_sign(self.key_pos.column - self.position.column)
+            delta_key_pos_row = get_direction_sign(self.key_pos.row - self.position.row)
+            delta_key_pos_col = get_direction_sign(self.key_pos.column - self.position.column)
         else:
             delta_key_pos_row = 0
             delta_key_pos_col = 0
         if self.treasure_pos:
-            delta_door_pos_row = self.get_direction_sign(self.door_pos.row - self.position.row)
-            delta_door_pos_col = self.get_direction_sign(self.door_pos.column  - self.position.column)
+            delta_door_pos_row = get_direction_sign(self.door_pos.row - self.position.row)
+            delta_door_pos_col = get_direction_sign(self.door_pos.column  - self.position.column)
         else:
             delta_door_pos_row = 0
             delta_door_pos_col = 0
         if self.treasure_pos:
-            delta_treasure_pos_row = self.get_direction_sign(self.treasure_pos.row - self.position.row)
-            delta_treasure_pos_col = self.get_direction_sign(self.treasure_pos.column  - self.position.column)
+            delta_treasure_pos_row = get_direction_sign(self.treasure_pos.row - self.position.row)
+            delta_treasure_pos_col = get_direction_sign(self.treasure_pos.column  - self.position.column)
         else:
             delta_treasure_pos_row = 0
             delta_treasure_pos_col = 0
@@ -194,18 +190,6 @@ class Agent:
 
         self.q_table.set_quality(current_state_key, action, updated_quality)
 
-    def punish_last_action(self, punishment: int, learning_rate: float = 0.5) -> None:
-        """
-        Appelée par le jeu si on meurt APRES le tour de l'IA (collision physique).
-        On modifie la valeur de la dernière action pour dire "C'était mortel".
-        """
-        if self.__previous_state is not None and self.__previous_action is not None:
-            old_q = self.q_table.get_quality(self.__previous_state, self.__previous_action)
-
-            # On écrase la valeur précédente vers la punition (-50)
-            new_q = old_q + learning_rate * (punishment - old_q)
-
-            self.q_table.set_quality(self.__previous_state, self.__previous_action, new_q)
 
     def choose_best_action(self) -> Action:
         current_state_key = self.get_state_key()
@@ -215,13 +199,6 @@ class Agent:
         return self.q_table.choose_best_action(current_state_key)
 
     def choose_action_from_knowledge_or_random(self) -> Action:
-        '''
-        Returns a random action or an action from the knowledge according to the exploration rate and a random generated float number between 0.0 and 1.0.
-
-        :param float exploration_rate: The probability of the agent to do a random action to explore the map.
-        :rtype: Action
-        :return: The next action the agent will perform. It could be a random action or the best action according to the knowledge of the agent.
-        '''
         if random.random() < self.exploration:
             return choice(list(Action))
         self.exploration *= .99
@@ -232,7 +209,6 @@ class Agent:
             max_steps: int,
             learning_rate: float,
             discount_factor: float,
-            exploration_rate: float,
     ) -> int:
         self.reset()
         total_reward: int = 0
@@ -249,7 +225,10 @@ class Agent:
 
     def save(self, filename):
         with open(filename, 'wb') as file:
+            # noinspection PyTypeChecker
             pickle.dump((self.q_table, self.history), file)
+
+
 
     def load(self, filename):
         with open(filename, 'rb') as file:

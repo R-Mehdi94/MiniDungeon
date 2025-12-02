@@ -18,7 +18,6 @@ from infrastructure.arcade.settings import (
 from infrastructure.data.map_1 import MAP_1
 from infrastructure.data.map_2 import MAP_2
 from infrastructure.data.map_3 import MAP_3
-from infrastructure.data.map_4 import MAP_4
 from infrastructure.data.map_5 import MAP_TRAINING_2
 from infrastructure.game import Game
 
@@ -37,11 +36,11 @@ def run_training_on_3_maps_scenario() -> None:
     agent = Agent(environment)
 
     print("=== TRAINING AGENT ON 3 LEVELS (OFFLINE Q-LEARNING) ===")
-    train_agent_on_3_maps_use_case(
-        agent=agent,
-        maps=maps,
-        episode_count=1000,
-    )
+    #train_agent_on_3_maps_use_case(
+    #    agent=agent,
+    #    maps=maps,
+    #    episode_count=1000,
+    #)
 
     print("=== STARTING ARCADE GAME (3 MAPS SCENARIO) ===")
     window = Game(agent, maps=maps)
