@@ -434,7 +434,7 @@ class Game(arcade.Window):
         if self.victory:
             return
 
-        self.update_monsters()
+        self.update_monsters(delta_time)
 
         current_monster_positions = []
 
@@ -452,7 +452,7 @@ class Game(arcade.Window):
         self.player_move_timer -= delta_time
 
         if self.player_move_timer <= 0:
-            self.player_move_timer = random.uniform(0.1, 0.2)
+            self.player_move_timer = random.uniform(0.1, 0.1)
 
             direction: Action = self.agent.choose_action_from_knowledge_or_random()
 
@@ -525,20 +525,27 @@ class Game(arcade.Window):
             print(f"VICTORY - Score Final: {self.agent.score}")
             self.victory = True
 
-    def update_monsters(self) -> None:
+    def update_monsters(self, delta_time: float) -> None:  # Ajoute delta_time ici
         for monster in self.monster_list:
-            dx: float = 0.0
-            dy: float = 0.0
+            monster.move_timer -= delta_time
+
+            if monster.move_timer > 0:
+                continue
+
+            monster.move_timer = monster.time_between_moves
+
+            dx: float = 0
+            dy: float = 0
             direction: Action = monster.direction
 
             if direction is Action.LEFT:
-                dx = -MONSTER_MOVEMENT_SPEED
+                dx = -TILE_PIXEL_SIZE
             elif direction is Action.RIGHT:
-                dx = MONSTER_MOVEMENT_SPEED
+                dx = TILE_PIXEL_SIZE
             elif direction is Action.UP:
-                dy = MONSTER_MOVEMENT_SPEED
+                dy = TILE_PIXEL_SIZE
             elif direction is Action.DOWN:
-                dy = -MONSTER_MOVEMENT_SPEED
+                dy = -TILE_PIXEL_SIZE
 
             monster.center_x += dx
             monster.center_y += dy

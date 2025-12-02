@@ -5,6 +5,8 @@ from random import choice
 
 
 class Monster(arcade.Sprite):
+    __axis: MonsterAxis
+    __direction: Action
 
     def __init__(
         self,
@@ -23,6 +25,25 @@ class Monster(arcade.Sprite):
         else:
             self.direction = choice([Action.UP, Action.DOWN])
 
+        self.move_timer = 0.5
+        self.time_between_moves = 0.5
+
+    @property
+    def axis(self) -> MonsterAxis:
+        return self.__axis
+
+    @axis.setter
+    def axis(self, axis: MonsterAxis) -> None:
+        self.__axis = axis
+
+    @property
+    def direction(self) -> Action:
+        return self.__direction
+
+    @direction.setter
+    def direction(self, direction: Action) -> None:
+        self.__direction = direction
+
     def reverse_direction(self) -> None:
         if self.direction is Action.LEFT:
             self.direction = Action.RIGHT
@@ -32,21 +53,3 @@ class Monster(arcade.Sprite):
             self.direction = Action.DOWN
         elif self.direction is Action.DOWN:
             self.direction = Action.UP
-
-
-    @property
-    def axis(self) -> MonsterAxis:
-        return self.axis
-
-    @axis.setter
-    def axis(self, axis: MonsterAxis) -> None:
-        self.axis = axis
-
-    @property
-    def direction(self) -> Action:
-        return self.direction
-
-    @direction.setter
-    def direction(self, direction: Action) -> None:
-        self.direction = direction
-
