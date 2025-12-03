@@ -519,6 +519,7 @@ class Game(arcade.Window):
         if len(treasure_hit_list) > 0:
             print(f"VICTORY - Score Final: {self.agent.score}")
             self.victory = True
+            self.restart_game()
 
     def update_monsters(self, delta_time: float) -> None:  # Ajoute delta_time ici
         for monster in self.monster_list:

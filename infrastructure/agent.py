@@ -154,7 +154,7 @@ class Agent:
     def execute_action_and_learn_from_reward(
             self,
             action: Action,
-            learning_rate: float = 0.4,
+            learning_rate: float = 0.2,
             discount_factor: float = 0.9
     ) -> None:
 

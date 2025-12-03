@@ -1,6 +1,6 @@
 from typing import List
 
-MAP_TRAINING_2: List[str] = [
+MAP_TRAINING_1: List[str] = [
     '####################',
     '#P        #       K#',
     '#######   #   ###  #',
@@ -13,13 +13,13 @@ MAP_TRAINING_2: List[str] = [
 ]
 
 
-MAP_TRAINING_1: List[str] = [
+MAP_TRAINING_2: List[str] = [
     '####################',
     '#P        #       K#',
     '#######   #   ###  #',
-    '#         #   #    #',
+    '#      M  #   #    #',
     '#  M      #   # D  #',
-    '#     #####   #    #',
+    '#    M#####   #    #',
     '#             # T  #',
     '####################',
 ]
