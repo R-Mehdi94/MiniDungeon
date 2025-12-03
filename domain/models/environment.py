@@ -40,8 +40,6 @@ class Environment:
             col = 0
         self.__height = row
 
-
-
     def update_monster_positions(self, positions: list[Position]) -> None:
         self.__monster_positions = positions
 
@@ -49,7 +47,6 @@ class Environment:
 
         if position in self.__monster_positions:
             return CellContent.MONSTER
-
 
         char = self.__map.get(position)
 
@@ -95,8 +92,7 @@ class Environment:
 
         return new_pos, Reward.STEP
 
-
-#GETTER / SETTER
+    # GETTER / SETTER
 
     @property
     def map(self) -> dict[Position, str]:

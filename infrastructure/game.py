@@ -30,7 +30,6 @@ def draw_grid() -> None:
 
 class Game(arcade.Window):
 
-
     def __init__(self, agent: Agent, maps: list[list[str]]) -> None:
         super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
 
@@ -298,14 +297,13 @@ class Game(arcade.Window):
         self.monster_list = arcade.SpriteList()
         self.treasure_list = arcade.SpriteList()
 
-
         player_found: bool = False
 
         for row_index, row in enumerate(self.current_map):
             for col_index, char in enumerate(row):
                 x: float = col_index * TILE_PIXEL_SIZE + TILE_PIXEL_SIZE / 2
-                y: float = ((MAP_HEIGHT_TILES - 1 - row_index) * TILE_PIXEL_SIZE+ TILE_PIXEL_SIZE / 2
-                )
+                y: float = ((MAP_HEIGHT_TILES - 1 - row_index) * TILE_PIXEL_SIZE + TILE_PIXEL_SIZE / 2
+                            )
 
                 if char == "#":
                     wall = arcade.Sprite(
@@ -337,7 +335,7 @@ class Game(arcade.Window):
                     )
                     key.center_x = x
                     key.center_y = y
-                    self.agent.key_pos = Position(row_index,col_index)
+                    self.agent.key_pos = Position(row_index, col_index)
                     self.key_list.append(key)
 
                 elif char == "D":
@@ -347,7 +345,7 @@ class Game(arcade.Window):
                     )
                     door.center_x = x
                     door.center_y = y
-                    self.agent.door_pos = Position(row_index,col_index)
+                    self.agent.door_pos = Position(row_index, col_index)
                     self.door_list.append(door)
 
                 elif char == "M":
@@ -367,7 +365,7 @@ class Game(arcade.Window):
                     )
                     treasure.center_x = x
                     treasure.center_y = y
-                    self.agent.treasure_pos = Position(row_index,col_index)
+                    self.agent.treasure_pos = Position(row_index, col_index)
                     self.treasure_list.append(treasure)
 
         if not player_found:
@@ -383,7 +381,6 @@ class Game(arcade.Window):
             f" {len(self.wall_list)} walls, {len(self.key_list)} keys, "
             f"{len(self.monster_list)} monsters, {len(self.door_list)} doors"
         )
-
 
     def on_draw(self) -> None:
         self.clear()
@@ -448,11 +445,10 @@ class Game(arcade.Window):
 
         self.agent.environment.update_monster_positions(current_monster_positions)
 
-
         self.player_move_timer -= delta_time
 
         if self.player_move_timer <= 0:
-            self.player_move_timer = random.uniform(0.1, 0.1)
+            self.player_move_timer = random.uniform(0.0, 0.0)
 
             direction: Action = self.agent.choose_action_from_knowledge_or_random()
 
@@ -474,7 +470,6 @@ class Game(arcade.Window):
 
             self.player_sprite.center_x = x
             self.player_sprite.center_y = y
-
 
             key_hit_list = arcade.check_for_collision_with_list(
                 self.player_sprite,

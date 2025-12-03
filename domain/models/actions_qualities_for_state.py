@@ -1,4 +1,5 @@
 from domain.models.action import Action
+import random
 
 
 class ActionsQualitiesForState:
@@ -24,4 +25,6 @@ class ActionsQualitiesForState:
         self.__qualities[action] = quality
 
     def choose_best_action(self) -> Action:
-        return max(self.__qualities, key=lambda action: self.__qualities[action])
+        max_q = max(self.__qualities.values())
+        best_actions = [action for action, q in self.__qualities.items() if q == max_q]
+        return random.choice(best_actions)

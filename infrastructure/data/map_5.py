@@ -1,22 +1,27 @@
 from typing import List
 
-MAP_TRAINING_1: List[str] = [
-    '#############',
-    '#P    #  T  #',
-    '#  M  #  #  #',
-    '#  K  D  #  #',
-    '#     #     #',
-    '#############',
-]
-
-# Map "Le Labyrinthe" (environ 20x10)
 MAP_TRAINING_2: List[str] = [
     '####################',
-    '#P        #       K#',  # P en haut à gauche, K au fond à droite
+    '#P        #       K#',
     '#######   #   ###  #',
+    '# M       #   #    #',
     '#         #   #    #',
-    '#  M      #   # D  #',  # Un monstre patrouille à gauche
-    '#     #####   #    #',
-    '#             # T  #',  # Le Trésor est protégé derrière la porte
+    '#         #   ##D###',
+    '# M   #####   #    #',
+    '#             # T  #',
     '####################',
 ]
+
+
+MAP_TRAINING_1: List[str] = [
+    '####################',
+    '#P        #       K#',
+    '#######   #   ###  #',
+    '#         #   #    #',
+    '#  M      #   # D  #',
+    '#     #####   #    #',
+    '#             # T  #',
+    '####################',
+]
+
+

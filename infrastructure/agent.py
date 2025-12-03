@@ -23,7 +23,6 @@ def get_direction_sign(val: int) -> int:
 
 class Agent:
 
-
     def __init__(self, env: Environment) -> None:
         self.environment = env
         self.q_table = QTable(initial_quality=0.0)
@@ -66,7 +65,6 @@ class Agent:
 
         return Radar(surroundings_tuple)
 
-
     def dynamic_goal(self) -> Position:
         if self.has_key and self.has_door is False:
 
@@ -85,10 +83,17 @@ class Agent:
         1 = Bloqué (Mur, Porte fermée)
         2 = Danger (Monstre)
         """
+
+        cell_row = self.position.row
+        cell_col = self.position.column
+
+        # Appliquer l’offset pour regarder la case voisine
         target = Position(
-            self.position.row + row_offset,
-            self.position.column + col_offset
+            cell_row + row_offset,
+            cell_col + col_offset
         )
+        print("PLAYER PIXEL POSITION:", self.position)
+        print("PLAYER CELL POSITION:", cell_row, cell_col)
         content = self.environment.get_cell_content(target)
 
         if content == CellContent.MONSTER:
@@ -119,49 +124,49 @@ class Agent:
         else:
             delta_key_pos_row = 0
             delta_key_pos_col = 0
-        if self.treasure_pos:
+        if self.door_pos:
             delta_door_pos_row = get_direction_sign(self.door_pos.row - self.position.row)
-            delta_door_pos_col = get_direction_sign(self.door_pos.column  - self.position.column)
+            delta_door_pos_col = get_direction_sign(self.door_pos.column - self.position.column)
         else:
             delta_door_pos_row = 0
             delta_door_pos_col = 0
         if self.treasure_pos:
             delta_treasure_pos_row = get_direction_sign(self.treasure_pos.row - self.position.row)
-            delta_treasure_pos_col = get_direction_sign(self.treasure_pos.column  - self.position.column)
+            delta_treasure_pos_col = get_direction_sign(self.treasure_pos.column - self.position.column)
         else:
             delta_treasure_pos_row = 0
             delta_treasure_pos_col = 0
 
-        return (delta_key_pos_row, delta_key_pos_col), (delta_door_pos_row, delta_door_pos_col), (delta_treasure_pos_row, delta_treasure_pos_col)
-
-
+        return (delta_key_pos_row, delta_key_pos_col), (delta_door_pos_row, delta_door_pos_col), (
+            delta_treasure_pos_row, delta_treasure_pos_col)
 
     def get_state_key(self) -> tuple:
-
         radar = self.scan_surroundings()
+        state_goals = self.get_state()
 
-        state = self.get_state()
+        # Ajout de la position (row, column) à l'état
+        state_position = (self.position.row, self.position.column)
 
-        test = radar,state,self.has_key
-        print(test)
+        full_state_key = (radar, state_goals, self.has_key, self.has_door, state_position)
 
-        return test
+        return full_state_key
 
     def execute_action_and_learn_from_reward(
             self,
             action: Action,
-            learning_rate: float = 0.6,
+            learning_rate: float = 0.4,
             discount_factor: float = 0.9
     ) -> None:
 
         current_state_key = self.get_state_key()
 
-        #self.__previous_state = current_state_key
-        #self.__previous_action = action
+        # self.__previous_state = current_state_key
+        # self.__previous_action = action
 
         self.radar = self.scan_area()
-
+        old_position = self.position
         next_position, reward = self.environment.do(self.position, action, self.has_key)
+        print(f"Action: {action}, Old: {old_position}, New: {next_position}, Reward: {reward}")  # Debug
 
         self.position = next_position
         self.reward = reward
@@ -190,13 +195,26 @@ class Agent:
 
         self.q_table.set_quality(current_state_key, action, updated_quality)
 
-
     def choose_best_action(self) -> Action:
-        current_state_key = self.get_state_key()
 
+        current_state_key = self.get_state_key()
         self.radar = self.scan_area()
 
-        return self.q_table.choose_best_action(current_state_key)
+        qualities = {}
+        for action in Action:
+            qualities[action] = self.q_table.get_quality(current_state_key, action)
+
+        print(f"Q-values pour state {current_state_key}: {qualities}")
+
+        max_quality = max(qualities.values())
+
+        best_actions = [action for action, q in qualities.items() if q == max_quality]
+
+        chosen_action = random.choice(best_actions)
+
+        print(f"Actions avec max Q ({max_quality}): {best_actions}, Choix: {chosen_action}")
+
+        return chosen_action
 
     def choose_action_from_knowledge_or_random(self) -> Action:
         if random.random() < self.exploration:
@@ -227,8 +245,6 @@ class Agent:
         with open(filename, 'wb') as file:
             # noinspection PyTypeChecker
             pickle.dump((self.q_table, self.history), file)
-
-
 
     def load(self, filename):
         with open(filename, 'rb') as file:
