@@ -18,6 +18,7 @@ from infrastructure.arcade.settings import (
 from infrastructure.data.map_1 import MAP_1
 from infrastructure.data.map_2 import MAP_2
 from infrastructure.data.map_3 import MAP_3
+from infrastructure.data.map_4 import MAP_4
 from infrastructure.data.map_5 import MAP_TRAINING_2
 from infrastructure.game import Game
 
@@ -50,9 +51,9 @@ def run_training_on_3_maps_scenario() -> None:
 
 def run_training_on_map_4_scenario() -> None:
 
-    maps = [MAP_TRAINING_2]
+    maps = [MAP_4]
 
-    environment = Environment(MAP_TRAINING_2)
+    environment = Environment(MAP_4)
     agent = Agent(environment)
 
     if os.path.exists(FILE_AGENT):
