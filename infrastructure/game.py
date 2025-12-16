@@ -19,13 +19,8 @@ from infrastructure.arcade.settings import (
 from infrastructure.monster import Monster
 
 
-def draw_grid() -> None:
-    """Dessine une grille pour visualiser les cases."""
-    for x in range(0, SCREEN_WIDTH + TILE_PIXEL_SIZE, TILE_PIXEL_SIZE):
-        arcade.draw_line(x, 0, x, SCREEN_HEIGHT, arcade.color.WHITE, 1)
 
-    for y in range(0, SCREEN_HEIGHT + TILE_PIXEL_SIZE, TILE_PIXEL_SIZE):
-        arcade.draw_line(0, y, SCREEN_WIDTH, y, arcade.color.WHITE, 1)
+
 
 
 class Game(arcade.Window):
@@ -279,6 +274,15 @@ class Game(arcade.Window):
     def qtable_text(self, text: arcade.Text) -> None:
         self.__qtable_text = text
 
+    def draw_grid(self) -> None:
+        width = self.map_width_tiles * TILE_PIXEL_SIZE
+        height = self.map_height_tiles * TILE_PIXEL_SIZE
+
+        for x in range(0, width + TILE_PIXEL_SIZE, TILE_PIXEL_SIZE):
+            arcade.draw_line(x, 0, x, height, arcade.color.WHITE, 1)
+
+        for y in range(0, height + TILE_PIXEL_SIZE, TILE_PIXEL_SIZE):
+            arcade.draw_line(0, y, width, y, arcade.color.WHITE, 1)
     def setup(self) -> None:
         print("\n=== LEVEL LOADING ===")
         self.key_count = 0
@@ -296,14 +300,29 @@ class Game(arcade.Window):
         self.door_list = arcade.SpriteList()
         self.monster_list = arcade.SpriteList()
         self.treasure_list = arcade.SpriteList()
+        env = self.agent.environment
+
+        self.map_width_tiles = env.width
+        self.map_height_tiles = env.height
+
+        screen_width = self.map_width_tiles * TILE_PIXEL_SIZE
+        screen_height = self.map_height_tiles * TILE_PIXEL_SIZE
+
+        self.set_size(screen_width, screen_height)
 
         player_found: bool = False
 
         for row_index, row in enumerate(self.current_map):
+
+
             for col_index, char in enumerate(row):
                 x: float = col_index * TILE_PIXEL_SIZE + TILE_PIXEL_SIZE / 2
-                y: float = ((MAP_HEIGHT_TILES - 1 - row_index) * TILE_PIXEL_SIZE + TILE_PIXEL_SIZE / 2
-                            )
+                y = (
+                        (self.map_height_tiles - 1 - row_index)
+                        * TILE_PIXEL_SIZE
+                        + TILE_PIXEL_SIZE / 2
+                )
+
 
                 if char == "#":
                     wall = arcade.Sprite(
@@ -316,8 +335,7 @@ class Game(arcade.Window):
 
                 elif char == "P":
                     self.player_sprite = arcade.Sprite(
-                        ":resources:images/animated_characters/"
-                        "female_person/femalePerson_idle.png",
+                        ":resources:/images/animated_characters/female_adventurer/femaleAdventurer_walk0.png",
                         GLOBAL_SCALING,
                     )
                     self.player_sprite.center_x = x
@@ -346,6 +364,7 @@ class Game(arcade.Window):
                     door.center_x = x
                     door.center_y = y
                     self.agent.door_pos = Position(row_index, col_index)
+
                     self.door_list.append(door)
 
                 elif char == "M":
@@ -371,6 +390,11 @@ class Game(arcade.Window):
         if not player_found:
             print(" ERROR: PLAYER NOT FOUND!")
             return
+        door_pos = self.agent.environment.door
+        if door_pos:
+            print(f"DEBUG SETUP: Current Door Position: {door_pos}")
+        else:
+            print("DEBUG SETUP: No Door (D) on the map for the Agent to target.")
 
         self.physics_engine = arcade.PhysicsEngineSimple(
             self.player_sprite,
@@ -396,7 +420,7 @@ class Game(arcade.Window):
         self.exploration_text.draw()
         self.qtable_text.draw()
         self.position_text.draw()
-        draw_grid()
+        self.draw_grid()
 
     def on_key_press(self, symbol: int, exploration: int) -> None:
         if symbol == arcade.key.R:
@@ -454,7 +478,19 @@ class Game(arcade.Window):
 
             self.agent.execute_action_and_learn_from_reward(direction)
 
+            if self.agent.reward == Reward.DOOR:
+                opened_pos = self.agent.opened_door_position
+
+                for door in self.door_list:
+                    door_col = int(door.center_x // TILE_PIXEL_SIZE)
+                    door_row = int((SCREEN_HEIGHT - door.center_y) // TILE_PIXEL_SIZE)
+
+                    if Position(door_row, door_col) == opened_pos:
+                        door.remove_from_sprite_lists()
+                        break
+
             self.action_count += 1
+
             self.score_text.text = f"Score: {self.agent.score}"
             self.actions_text.text = f"Actions: {self.action_count}"
             self.exploration_text.text = f"Exploration: {self.agent.exploration:.3f}"
@@ -471,6 +507,15 @@ class Game(arcade.Window):
             self.player_sprite.center_x = x
             self.player_sprite.center_y = y
 
+            if self.agent.level_completed:
+                print(f"NIVEAU {self.current_level_index + 1} TERMINÉ! Transition vers le niveau suivant...")
+
+                self.agent.level_completed = False
+
+                self.go_to_next_level()
+
+                return
+
             key_hit_list = arcade.check_for_collision_with_list(
                 self.player_sprite,
                 self.key_list,
@@ -482,19 +527,7 @@ class Game(arcade.Window):
                 self.key_text.text = f"Keys: {self.key_count}"
                 print(f"KEY COLLECTED! TOTAL: {self.key_count}")
 
-            door_hit_list = arcade.check_for_collision_with_list(
-                self.player_sprite,
-                self.door_list,
-            )
-            for door in door_hit_list:
-                if self.key_count > 0:
-                    self.key_count -= 1
-                    self.door_pos = None
-                    self.key_text.text = f"Keys: {self.key_count}"
-                    door.remove_from_sprite_lists()
-                    print("DOOR OPENED!")
-                else:
-                    pass
+
 
         self.physics_engine.update()
 
@@ -576,6 +609,5 @@ class Game(arcade.Window):
 
         new_env = Environment(self.current_map)
         self.agent.environment = new_env
-        self.agent.reset()
-
+        self.agent.reset(keep_score=True)
         self.setup()

@@ -7,6 +7,6 @@ class Reward(IntEnum):
     OUT_OF_MAP = -10
     MONSTER = -100
     DOR_NO_KEY = -5
-    KEY = 100
+    KEY = 50
     DOOR = 100
     GOAL = 1000

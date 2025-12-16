@@ -79,6 +79,7 @@ class Environment:
         if cell == MAP_DOOR:
             if has_key:
                 self.__map[new_pos] = MAP_EMPTY
+                self.__door = None
                 return new_pos, Reward.DOOR
             else:
                 return pos, Reward.DOR_NO_KEY

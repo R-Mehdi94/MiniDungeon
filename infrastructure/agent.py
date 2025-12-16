@@ -24,6 +24,8 @@ def get_direction_sign(val: int) -> int:
 class Agent:
 
     def __init__(self, env: Environment) -> None:
+        self.opened_door_position = None
+        self.level_completed = False
         self.environment = env
         self.q_table = QTable(initial_quality=0.0)
         self.position = self.environment.starting_position
@@ -48,8 +50,8 @@ class Agent:
         self.previous_state = None
         self.previous_action = None
 
-    def reset(self) -> None:
-        if self.score is not None:
+    def reset(self, keep_score: bool = False) -> None:
+        if not keep_score and self.score is not None:
             self.history.append(self.score)
         self.position = self.environment.starting_position
         self.has_key = False
@@ -58,6 +60,9 @@ class Agent:
         self.has_finished_episode = False
         self.reward = 0
         self.iterations_count = 0
+
+        if not keep_score:
+            self.score = 0
 
     def scan_area(self) -> Radar:
 
@@ -94,6 +99,7 @@ class Agent:
         )
         print("PLAYER PIXEL POSITION:", self.position)
         print("PLAYER CELL POSITION:", cell_row, cell_col)
+        print ("DOOR POSITION", self.door_pos)
         content = self.environment.get_cell_content(target)
 
         if content == CellContent.MONSTER:
@@ -177,7 +183,11 @@ class Agent:
             self.has_key = True
         elif reward == Reward.DOOR:
             self.has_key = False
-            self.has_door = True
+            self.opened_door_position = self.position  
+            if self.environment.goal is not None:
+                self.has_door = True
+            else:
+                self.level_completed = True
 
         if reward == Reward.GOAL or reward == Reward.MONSTER:
             self.has_finished_episode = True
