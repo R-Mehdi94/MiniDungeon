@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import arcade
 import os.path
-
+import matplotlib
+matplotlib.use('Qt5Agg')
 from matplotlib import pyplot as plt
 
 from application.train_agent_on_3_maps_use_case import train_agent_on_3_maps_use_case
@@ -16,7 +17,6 @@ from infrastructure.data.map_2 import MAP_2
 from infrastructure.data.map_4 import MAP_4
 
 from infrastructure.game import Game
-
 
 
 FILE_AGENT = 'agent.qtable'

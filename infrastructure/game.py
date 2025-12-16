@@ -396,6 +396,7 @@ class Game(arcade.Window):
         else:
             print("DEBUG SETUP: No Door (D) on the map for the Agent to target.")
 
+        print("Score de l'agent :", self.agent.score)
         self.physics_engine = arcade.PhysicsEngineSimple(
             self.player_sprite,
             [self.wall_list, self.door_list],
@@ -462,8 +463,7 @@ class Game(arcade.Window):
         for monster in self.monster_list:
             col = int(monster.center_x // TILE_PIXEL_SIZE)
 
-            row = int((SCREEN_HEIGHT - monster.center_y) // TILE_PIXEL_SIZE)
-
+            row = self.map_height_tiles - 1 - int(monster.center_y // TILE_PIXEL_SIZE)
             if 0 <= row < MAP_HEIGHT_TILES:
                 current_monster_positions.append(Position(row, col))
 
@@ -478,16 +478,7 @@ class Game(arcade.Window):
 
             self.agent.execute_action_and_learn_from_reward(direction)
 
-            if self.agent.reward == Reward.DOOR:
-                opened_pos = self.agent.opened_door_position
 
-                for door in self.door_list:
-                    door_col = int(door.center_x // TILE_PIXEL_SIZE)
-                    door_row = int((SCREEN_HEIGHT - door.center_y) // TILE_PIXEL_SIZE)
-
-                    if Position(door_row, door_col) == opened_pos:
-                        door.remove_from_sprite_lists()
-                        break
 
             self.action_count += 1
 
@@ -502,13 +493,13 @@ class Game(arcade.Window):
             new_x = self.agent.position.column
 
             x = new_x * TILE_PIXEL_SIZE + TILE_PIXEL_SIZE / 2
-            y = ((MAP_HEIGHT_TILES - 1 - new_y) * TILE_PIXEL_SIZE + TILE_PIXEL_SIZE / 2)
-
+            y = ((self.map_height_tiles - 1 - new_y) * TILE_PIXEL_SIZE + TILE_PIXEL_SIZE / 2)
             self.player_sprite.center_x = x
             self.player_sprite.center_y = y
 
             if self.agent.level_completed:
-                print(f"NIVEAU {self.current_level_index + 1} TERMINÉ! Transition vers le niveau suivant...")
+                print(f"NIVEAU {self.current_level_index + 1} TERMINÉ! Transition vers le niveau suivant... avec el "
+                      f"score :",self.agent.score)
 
                 self.agent.level_completed = False
 
@@ -527,6 +518,19 @@ class Game(arcade.Window):
                 self.key_text.text = f"Keys: {self.key_count}"
                 print(f"KEY COLLECTED! TOTAL: {self.key_count}")
 
+            door_hit_list = arcade.check_for_collision_with_list(
+                self.player_sprite,
+                self.door_list,
+            )
+            for door in door_hit_list:
+                if self.key_count > 0:
+                    self.key_count -= 1
+                    self.door_pos = None
+                    self.key_text.text = f"Keys: {self.key_count}"
+                    door.remove_from_sprite_lists()
+                    print("DOOR OPENED!")
+                else:
+                    pass
 
 
         self.physics_engine.update()
@@ -539,7 +543,7 @@ class Game(arcade.Window):
 
             if self.agent.reward != Reward.MONSTER:
                 print("COLLISION PHYSIQUE ! Application de la punition...")
-                self.agent.score += Reward.MONSTER
+                #self.agent.score += Reward.MONSTER
 
             print(f"GAME OVER - Score Final: {self.agent.score}")
 
@@ -606,8 +610,9 @@ class Game(arcade.Window):
             return
 
         self.current_map = self.maps[self.current_level_index]
-
+        temp_score = self.agent.score
         new_env = Environment(self.current_map)
         self.agent.environment = new_env
-        self.agent.reset(keep_score=True)
+        self.agent.reset()
+        self.agent.score = temp_score
         self.setup()

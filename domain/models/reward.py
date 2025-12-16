@@ -8,5 +8,5 @@ class Reward(IntEnum):
     MONSTER = -100
     DOR_NO_KEY = -5
     KEY = 50
-    DOOR = 100
+    DOOR = 150
     GOAL = 1000

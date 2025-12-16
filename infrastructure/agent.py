@@ -61,25 +61,13 @@ class Agent:
         self.reward = 0
         self.iterations_count = 0
 
-        if not keep_score:
-            self.score = 0
+        self.score = 0
 
     def scan_area(self) -> Radar:
 
         surroundings_tuple = self.scan_surroundings()
 
         return Radar(surroundings_tuple)
-
-    def dynamic_goal(self) -> Position:
-        if self.has_key and self.has_door is False:
-
-            return self.environment.door
-
-        elif self.has_door:
-            return self.environment.goal
-
-        else:
-            return self.environment.key
 
     def get_cell_type(self, row_offset: int, col_offset: int) -> int:
         """
@@ -99,7 +87,7 @@ class Agent:
         )
         print("PLAYER PIXEL POSITION:", self.position)
         print("PLAYER CELL POSITION:", cell_row, cell_col)
-        print ("DOOR POSITION", self.door_pos)
+        print("DOOR POSITION", self.door_pos)
         content = self.environment.get_cell_content(target)
 
         if content == CellContent.MONSTER:
@@ -183,7 +171,7 @@ class Agent:
             self.has_key = True
         elif reward == Reward.DOOR:
             self.has_key = False
-            self.opened_door_position = self.position  
+
             if self.environment.goal is not None:
                 self.has_door = True
             else:
