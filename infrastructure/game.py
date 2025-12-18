@@ -19,10 +19,6 @@ from infrastructure.arcade.settings import (
 from infrastructure.monster import Monster
 
 
-
-
-
-
 class Game(arcade.Window):
 
     def __init__(self, agent: Agent, maps: list[list[str]]) -> None:
@@ -283,8 +279,10 @@ class Game(arcade.Window):
 
         for y in range(0, height + TILE_PIXEL_SIZE, TILE_PIXEL_SIZE):
             arcade.draw_line(0, y, width, y, arcade.color.WHITE, 1)
+
     def setup(self) -> None:
         print("\n=== LEVEL LOADING ===")
+
         self.key_count = 0
         self.key_text = arcade.Text(
             f"Clés: {self.key_count}",
@@ -314,7 +312,6 @@ class Game(arcade.Window):
 
         for row_index, row in enumerate(self.current_map):
 
-
             for col_index, char in enumerate(row):
                 x: float = col_index * TILE_PIXEL_SIZE + TILE_PIXEL_SIZE / 2
                 y = (
@@ -322,7 +319,6 @@ class Game(arcade.Window):
                         * TILE_PIXEL_SIZE
                         + TILE_PIXEL_SIZE / 2
                 )
-
 
                 if char == "#":
                     wall = arcade.Sprite(
@@ -407,6 +403,7 @@ class Game(arcade.Window):
             f"{len(self.monster_list)} monsters, {len(self.door_list)} doors"
         )
 
+
     def on_draw(self) -> None:
         self.clear()
         self.wall_list.draw()
@@ -472,13 +469,11 @@ class Game(arcade.Window):
         self.player_move_timer -= delta_time
 
         if self.player_move_timer <= 0:
-            self.player_move_timer = random.uniform(0.0, 0.0)
+            self.player_move_timer = random.uniform(0.1, 0.1)
 
             direction: Action = self.agent.choose_action_from_knowledge_or_random()
 
             self.agent.execute_action_and_learn_from_reward(direction)
-
-
 
             self.action_count += 1
 
@@ -499,7 +494,7 @@ class Game(arcade.Window):
 
             if self.agent.level_completed:
                 print(f"NIVEAU {self.current_level_index + 1} TERMINÉ! Transition vers le niveau suivant... avec el "
-                      f"score :",self.agent.score)
+                      f"score :", self.agent.score)
 
                 self.agent.level_completed = False
 
@@ -532,7 +527,6 @@ class Game(arcade.Window):
                 else:
                     pass
 
-
         self.physics_engine.update()
 
         monster_hit_list = arcade.check_for_collision_with_list(
@@ -543,7 +537,7 @@ class Game(arcade.Window):
 
             if self.agent.reward != Reward.MONSTER:
                 print("COLLISION PHYSIQUE ! Application de la punition...")
-                #self.agent.score += Reward.MONSTER
+                # self.agent.score += Reward.MONSTER
 
             print(f"GAME OVER - Score Final: {self.agent.score}")
 
@@ -556,7 +550,7 @@ class Game(arcade.Window):
         if len(treasure_hit_list) > 0:
             print(f"VICTORY - Score Final: {self.agent.score}")
             self.victory = True
-            self.restart_game()
+            # self.restart_game()
 
     def update_monsters(self, delta_time: float) -> None:  # Ajoute delta_time ici
         for monster in self.monster_list:

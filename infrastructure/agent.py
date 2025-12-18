@@ -50,9 +50,8 @@ class Agent:
         self.previous_state = None
         self.previous_action = None
 
-    def reset(self, keep_score: bool = False) -> None:
-        if not keep_score and self.score is not None:
-            self.history.append(self.score)
+    def reset(self) -> None:
+
         self.position = self.environment.starting_position
         self.has_key = False
         self.has_door = False
@@ -138,7 +137,6 @@ class Agent:
         radar = self.scan_surroundings()
         state_goals = self.get_state()
 
-        # Ajout de la position (row, column) à l'état
         state_position = (self.position.row, self.position.column)
 
         full_state_key = (radar, state_goals, self.has_key, self.has_door, state_position)
@@ -195,8 +193,8 @@ class Agent:
 
     def choose_best_action(self) -> Action:
 
-        current_state_key = self.get_state_key()
         self.radar = self.scan_area()
+        current_state_key = self.get_state_key()
 
         qualities = {}
         for action in Action:
@@ -206,13 +204,9 @@ class Agent:
 
         max_quality = max(qualities.values())
 
-        best_actions = [action for action, q in qualities.items() if q == max_quality]
-
-        chosen_action = random.choice(best_actions)
-
-        print(f"Actions avec max Q ({max_quality}): {best_actions}, Choix: {chosen_action}")
-
-        return chosen_action
+        for action in Action:
+            if qualities[action] == max_quality:
+                return action
 
     def choose_action_from_knowledge_or_random(self) -> Action:
         if random.random() < self.exploration:

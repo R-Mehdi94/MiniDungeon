@@ -39,6 +39,7 @@ def run_training_on_3_maps_scenario() -> None:
     #)
 
     print("=== STARTING ARCADE GAME (MAP 4 SCENARIO) ===")
+
     window = Game(agent, maps=maps)
     window.setup()
     arcade.run()
