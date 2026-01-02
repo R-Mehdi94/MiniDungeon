@@ -1,8 +1,8 @@
-from domain.models.action import Action
-from domain.models.cell_content import CellContent
-from domain.models.map_constants import *
-from domain.models.position import Position
-from domain.models.reward import Reward
+from game.action import Action
+from environment.cell_content import CellContent
+from game.map.map_constants import *
+from environment.position import Position
+from environment.reward import Reward
 
 
 class Environment:
@@ -115,38 +115,20 @@ class Environment:
     def key(self) -> Position | None:
         return self.__key
 
-    @key.setter
-    def key(self, key: Position | None) -> None:
-        self.__key = key
-
     @property
     def door(self) -> Position | None:
         return self.__door
 
-    @door.setter
-    def door(self, door: Position | None) -> None:
-        self.__door = door
 
     @property
     def goal(self) -> Position | None:
         return self.__goal
 
-    @goal.setter
-    def goal(self, goal: Position | None) -> None:
-        self.__goal = goal
-
     @property
     def width(self) -> int:
         return self.__width
-
-    @width.setter
-    def width(self, width: int) -> None:
-        self.__width = width
 
     @property
     def height(self) -> int:
         return self.__height
 
-    @height.setter
-    def height(self, height: int) -> None:
-        self.__height = height

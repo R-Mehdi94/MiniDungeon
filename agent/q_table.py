@@ -1,5 +1,5 @@
-from domain.models.action import Action
-from domain.models.actions_qualities_for_state import ActionsQualitiesForState
+from agent.actions_qualities_for_state import ActionsQualitiesForState
+from game.action import Action
 
 
 class QTable:
@@ -39,6 +39,3 @@ class QTable:
 
     def choose_best_action(self, state_key: tuple) -> Action:
         return self.__or_create_state(state_key).choose_best_action()
-
-    def state_qualities(self, state_key: tuple) -> ActionsQualitiesForState:
-        return self.__or_create_state(state_key)

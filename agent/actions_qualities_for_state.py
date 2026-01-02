@@ -1,4 +1,4 @@
-from domain.models.action import Action
+from game.action import Action
 import random
 
 

@@ -1,6 +1,6 @@
 import arcade
-from domain.models.action import Action
-from domain.models.monster_axis import MonsterAxis
+from game.action import Action
+from game.monster.monster_axis import MonsterAxis
 from random import choice
 
 

@@ -2,21 +2,20 @@ import random
 
 import arcade
 
-from domain.models.action import Action
-from domain.models.environment import Environment
-from domain.models.position import Position
-from domain.models.reward import Reward
-from infrastructure.agent import Agent
-from infrastructure.arcade.settings import (
+from game.action import Action
+from environment.environment import Environment
+from environment.position import Position
+from environment.reward import Reward
+from agent.agent import Agent
+from game.settings import (
     GLOBAL_SCALING,
     MAP_HEIGHT_TILES,
-    MONSTER_MOVEMENT_SPEED,
     SCREEN_HEIGHT,
     SCREEN_TITLE,
     SCREEN_WIDTH,
     TILE_PIXEL_SIZE,
 )
-from infrastructure.monster import Monster
+from game.monster.monster import Monster
 
 
 class Game(arcade.Window):
@@ -440,14 +439,11 @@ class Game(arcade.Window):
         self.actions_text.text = f"Actions: {self.action_count}"
         self.key_text.text = f"Keys: {self.key_count}"
         self.exploration_text.text = f"Exploration: {self.agent.exploration}"
-        # self.qtable_text = f"Qtable:  {self.agent.q_table.}"
-
         self.victory = False
 
         self.setup()
 
-    def on_key_release(self, symbol: int, modifiers: int) -> None:
-        pass
+
 
     def on_update(self, delta_time: float) -> None:
         if self.victory:
@@ -459,8 +455,8 @@ class Game(arcade.Window):
 
         for monster in self.monster_list:
             col = int(monster.center_x // TILE_PIXEL_SIZE)
-
             row = self.map_height_tiles - 1 - int(monster.center_y // TILE_PIXEL_SIZE)
+            #Avoir la position des monstres en temps réel
             if 0 <= row < MAP_HEIGHT_TILES:
                 current_monster_positions.append(Position(row, col))
 
@@ -552,7 +548,7 @@ class Game(arcade.Window):
             self.victory = True
             # self.restart_game()
 
-    def update_monsters(self, delta_time: float) -> None:  # Ajoute delta_time ici
+    def update_monsters(self, delta_time: float) -> None:
         for monster in self.monster_list:
             monster.move_timer -= delta_time
 

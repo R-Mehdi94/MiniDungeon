@@ -1,5 +1,5 @@
 from __future__ import annotations
-from domain.models.movement import Movement
+from game.movement import Movement
 
 
 class Position:

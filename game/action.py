@@ -1,6 +1,6 @@
 from enum import Enum
 
-from domain.models.movement import Movement
+from game.movement import Movement
 
 
 class Action(Enum):

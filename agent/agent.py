@@ -1,14 +1,16 @@
 import pickle
+import sys
 from random import choice
 import random
-from domain.models.action import Action
-from domain.models.cell_content import CellContent
-from domain.models.environment import Environment
-from domain.models.radar import Radar
-from domain.models.reward import Reward
-from infrastructure.q_table import QTable
-from domain.models.position import Position
-
+import agent as infrastructure
+sys.modules['infrastructure'] = infrastructure
+from agent.q_table import QTable
+from agent.radar import Radar
+from game.action import Action
+from environment.cell_content import CellContent
+from environment.environment import Environment
+from environment.reward import Reward
+from environment.position import Position
 
 def get_direction_sign(val: int) -> int:
     """
@@ -19,6 +21,8 @@ def get_direction_sign(val: int) -> int:
     if val > 0: return 1
     if val < 0: return -1
     return 0
+
+
 
 
 class Agent:
@@ -151,9 +155,6 @@ class Agent:
     ) -> None:
 
         current_state_key = self.get_state_key()
-
-        # self.__previous_state = current_state_key
-        # self.__previous_action = action
 
         self.radar = self.scan_area()
         old_position = self.position
