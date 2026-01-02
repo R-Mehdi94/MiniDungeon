@@ -1,6 +1,6 @@
 from enum import Enum
 
-from game.movement import Movement
+from environment.position.movement import Movement
 
 
 class Action(Enum):

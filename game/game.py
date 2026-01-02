@@ -2,9 +2,9 @@ import random
 
 import arcade
 
-from game.action import Action
+from environment.position.action import Action
 from environment.environment import Environment
-from environment.position import Position
+from environment.position.position import Position
 from environment.reward import Reward
 from agent.agent import Agent
 from game.settings import (

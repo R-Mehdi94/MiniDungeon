@@ -1,5 +1,5 @@
 import arcade
-from game.action import Action
+from environment.position.action import Action
 from game.monster.monster_axis import MonsterAxis
 from random import choice
 

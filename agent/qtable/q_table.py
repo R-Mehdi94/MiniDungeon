@@ -1,5 +1,5 @@
-from agent.actions_qualities_for_state import ActionsQualitiesForState
-from game.action import Action
+from agent.qtable.actions_qualities_for_state import ActionsQualitiesForState
+from environment.position.action import Action
 
 
 class QTable:

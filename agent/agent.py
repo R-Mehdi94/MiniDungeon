@@ -1,16 +1,14 @@
 import pickle
-import sys
 from random import choice
 import random
-import agent as infrastructure
-sys.modules['infrastructure'] = infrastructure
-from agent.q_table import QTable
+from agent.qtable.q_table import QTable
 from agent.radar import Radar
-from game.action import Action
-from environment.cell_content import CellContent
+from environment.position.action import Action
+from environment.position.cell_content import CellContent
 from environment.environment import Environment
 from environment.reward import Reward
-from environment.position import Position
+from environment.position.position import Position
+
 
 def get_direction_sign(val: int) -> int:
     """

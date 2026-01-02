@@ -1,7 +1,7 @@
-from game.action import Action
-from environment.cell_content import CellContent
+from environment.position.action import Action
+from environment.position.cell_content import CellContent
 from game.map.map_constants import *
-from environment.position import Position
+from environment.position.position import Position
 from environment.reward import Reward
 
 

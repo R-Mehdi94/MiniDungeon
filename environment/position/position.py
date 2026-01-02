@@ -1,5 +1,5 @@
 from __future__ import annotations
-from game.movement import Movement
+from environment.position.movement import Movement
 
 
 class Position:

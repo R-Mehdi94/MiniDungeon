@@ -1,4 +1,4 @@
-from game.action import Action
+from environment.position.action import Action
 import random
 
 
