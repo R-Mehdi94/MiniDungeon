@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import arcade
 import os.path
-#import matplotlib
-#matplotlib.use('Qt5Agg')
+import matplotlib
+matplotlib.use('Qt5Agg')
 from matplotlib import pyplot as plt
 from environment.environment import Environment
 from agent.agent import Agent
@@ -11,9 +11,7 @@ from game.map.map import MAP_1, MAP_3, MAP_2
 
 from game.game import Game
 
-
 FILE_AGENT = 'agent.qtable'
-
 
 
 def main() -> None:

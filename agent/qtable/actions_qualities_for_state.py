@@ -26,5 +26,7 @@ class ActionsQualitiesForState:
 
     def choose_best_action(self) -> Action:
         max_q = max(self.__qualities.values())
-        best_actions = [action for action, q in self.__qualities.items() if q == max_q]
-        return random.choice(best_actions)
+
+        for action in Action:
+            if self.__qualities[action] == max_q:
+                return action

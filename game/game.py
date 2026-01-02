@@ -23,6 +23,8 @@ class Game(arcade.Window):
     def __init__(self, agent: Agent, maps: list[list[str]]) -> None:
         super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
 
+        self.map_height_tiles = None
+        self.map_width_tiles = None
         self.agent = agent
         self.maps = maps
         self.current_level_index = 0
