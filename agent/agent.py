@@ -21,8 +21,6 @@ def get_direction_sign(val: int) -> int:
     return 0
 
 
-
-
 class Agent:
 
     def __init__(self, env: Environment) -> None:
@@ -212,25 +210,6 @@ class Agent:
             return choice(list(Action))
         self.exploration *= .99
         return self.choose_best_action()
-
-    def run_episode(
-            self,
-            max_steps: int,
-            learning_rate: float,
-            discount_factor: float,
-    ) -> int:
-        self.reset()
-        total_reward: int = 0
-
-        for _ in range(max_steps):
-            action: Action = self.choose_action_from_knowledge_or_random()
-            self.execute_action_and_learn_from_reward(action, learning_rate, discount_factor)
-            total_reward += self.reward
-
-            if self.has_finished_episode:
-                break
-
-        return total_reward
 
     def save(self, filename):
         with open(filename, 'wb') as file:
