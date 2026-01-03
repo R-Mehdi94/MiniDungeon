@@ -59,6 +59,7 @@ class Agent:
         self.has_finished_episode = False
         self.reward = 0
         self.iterations_count = 0
+        self.treasure_pos = None
 
         self.score = 0
 
@@ -190,7 +191,6 @@ class Agent:
 
     def choose_best_action(self) -> Action:
 
-        self.radar = self.scan_area()
         current_state_key = self.get_state_key()
 
         qualities = {}

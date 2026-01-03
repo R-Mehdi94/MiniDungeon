@@ -387,9 +387,7 @@ class Game(arcade.Window):
         if not player_found:
             print(" ERROR: PLAYER NOT FOUND!")
             return
-        door_pos = self.agent.environment.door
-        if door_pos:
-            print(f"DEBUG SETUP: Current Door Position: {door_pos}")
+
         else:
             print("DEBUG SETUP: No Door (D) on the map for the Agent to target.")
 
@@ -403,7 +401,6 @@ class Game(arcade.Window):
             f" {len(self.wall_list)} walls, {len(self.key_list)} keys, "
             f"{len(self.monster_list)} monsters, {len(self.door_list)} doors"
         )
-
 
     def on_draw(self) -> None:
         self.clear()
@@ -445,8 +442,6 @@ class Game(arcade.Window):
 
         self.setup()
 
-
-
     def on_update(self, delta_time: float) -> None:
         if self.victory:
             return
@@ -458,7 +453,7 @@ class Game(arcade.Window):
         for monster in self.monster_list:
             col = int(monster.center_x // TILE_PIXEL_SIZE)
             row = self.map_height_tiles - 1 - int(monster.center_y // TILE_PIXEL_SIZE)
-            #Avoir la position des monstres en temps réel
+            # Avoir la position des monstres en temps réel
             if 0 <= row < MAP_HEIGHT_TILES:
                 current_monster_positions.append(Position(row, col))
 
@@ -548,7 +543,7 @@ class Game(arcade.Window):
         if len(treasure_hit_list) > 0:
             print(f"VICTORY - Score Final: {self.agent.score}")
             self.victory = True
-            # self.restart_game()
+            self.restart_game()
 
     def update_monsters(self, delta_time: float) -> None:
         for monster in self.monster_list:
