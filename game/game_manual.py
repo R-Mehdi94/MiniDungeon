@@ -2,11 +2,9 @@ import random
 
 import arcade
 
-from environment.position.action import Action
 from environment.environment import Environment
+from environment.position.action import Action
 from environment.position.position import Position
-from environment.reward import Reward
-from agent.agent import Agent
 from game.settings import (
     GLOBAL_SCALING,
     MAP_HEIGHT_TILES,
@@ -18,14 +16,14 @@ from game.settings import (
 from game.monster.monster import Monster
 
 
-class Game(arcade.Window):
+class GameManual(arcade.Window):
 
-    def __init__(self, agent: Agent, maps: list[list[str]]) -> None:
+    def __init__(self, env: Environment, maps: list[list[str]]) -> None:
         super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
-
+        self.env = env
         self.map_height_tiles = None
         self.map_width_tiles = None
-        self.agent = agent
+        self.level_completed = False
         self.maps = maps
         self.current_level_index = 0
         self.current_map = self.maps[self.current_level_index]
@@ -37,6 +35,7 @@ class Game(arcade.Window):
         self.door_list = arcade.SpriteList()
         self.monster_list = arcade.SpriteList()
         self.treasure_list = arcade.SpriteList()
+        self.key_pos = None
         self.key_pos = None
         self.door_pos = None
         self.treasure_pos = None
@@ -60,56 +59,10 @@ class Game(arcade.Window):
         )
 
         self.action_count = 0
-        self.score_text = arcade.Text(
-            f"Score: {self.agent.score}",
-            10,
-            40,
-            arcade.color.WHITE,
-            18,
-        )
-        self.actions_text = arcade.Text(
-            f"Actions: {self.action_count}",
-            10,
-            70,
-            arcade.color.WHITE,
-            18,
-        )
-
-        self.exploration_text = arcade.Text(
-            f"Exploration: {self.agent.exploration}",
-            10,
-            100,
-            arcade.color.WHITE,
-            18,
-        )
-
-        self.qtable_text = arcade.Text(
-            f"Q-Table Size: 0",
-            10,
-            130,
-            arcade.color.WHITE,
-            18,
-        )
-
-        self.position_text = arcade.Text(
-            f"Pos: {self.agent.position}",
-            10,
-            160,
-            arcade.color.WHITE,
-            18,
-        )
 
         self.player_move_timer = 0.0
 
         arcade.set_background_color(arcade.color.DARK_BROWN)
-
-    @property
-    def agent(self) -> Agent:
-        return self.__agent
-
-    @agent.setter
-    def agent(self, agent: Agent) -> None:
-        self.__agent = agent
 
     @property
     def wall_list(self) -> arcade.SpriteList[arcade.Sprite]:
@@ -231,29 +184,11 @@ class Game(arcade.Window):
     def action_count(self, count: int) -> None:
         self.__action_count = count
 
-    @property
-    def score_text(self) -> arcade.Text:
-        return self.__score_text
 
-    @score_text.setter
-    def score_text(self, text: arcade.Text) -> None:
-        self.__score_text = text
 
-    @property
-    def actions_text(self) -> arcade.Text:
-        return self.__actions_text
 
-    @actions_text.setter
-    def actions_text(self, text: arcade.Text) -> None:
-        self.__actions_text = text
 
-    @property
-    def exploration_text(self) -> arcade.Text:
-        return self.__exploration_text
 
-    @exploration_text.setter
-    def exploration_text(self, text: arcade.Text) -> None:
-        self.__exploration_text = text
 
     @property
     def victory(self) -> bool:
@@ -262,14 +197,6 @@ class Game(arcade.Window):
     @victory.setter
     def victory(self, value: bool) -> None:
         self.__victory = value
-
-    @property
-    def qtable_text(self) -> arcade.Text:
-        return self.__qtable_text
-
-    @qtable_text.setter
-    def qtable_text(self, text: arcade.Text) -> None:
-        self.__qtable_text = text
 
     def draw_grid(self) -> None:
         width = self.map_width_tiles * TILE_PIXEL_SIZE
@@ -283,6 +210,7 @@ class Game(arcade.Window):
 
     def setup(self) -> None:
         print("\n=== LEVEL LOADING ===")
+        env = self.env
 
         self.key_count = 0
         self.key_text = arcade.Text(
@@ -293,16 +221,16 @@ class Game(arcade.Window):
             18,
         )
 
+        self.map_width_tiles = env.width
+        self.map_height_tiles = env.height
+
         self.player_list = arcade.SpriteList()
         self.wall_list = arcade.SpriteList()
         self.key_list = arcade.SpriteList()
         self.door_list = arcade.SpriteList()
         self.monster_list = arcade.SpriteList()
         self.treasure_list = arcade.SpriteList()
-        env = self.agent.environment
 
-        self.map_width_tiles = env.width
-        self.map_height_tiles = env.height
 
         screen_width = self.map_width_tiles * TILE_PIXEL_SIZE
         screen_height = self.map_height_tiles * TILE_PIXEL_SIZE
@@ -339,7 +267,6 @@ class Game(arcade.Window):
                     self.player_sprite.center_y = y
                     self.player_list.append(self.player_sprite)
                     start_pos = Position(row_index, col_index)
-                    self.agent.position = start_pos
                     player_found = True
                     print(f"PLAYER STARTING POSITION: ({x:.0f}, {y:.0f})")
 
@@ -350,7 +277,6 @@ class Game(arcade.Window):
                     )
                     key.center_x = x
                     key.center_y = y
-                    self.agent.key_pos = Position(row_index, col_index)
                     self.key_list.append(key)
 
                 elif char == "D":
@@ -360,7 +286,6 @@ class Game(arcade.Window):
                     )
                     door.center_x = x
                     door.center_y = y
-                    self.agent.door_pos = Position(row_index, col_index)
 
                     self.door_list.append(door)
 
@@ -381,7 +306,6 @@ class Game(arcade.Window):
                     )
                     treasure.center_x = x
                     treasure.center_y = y
-                    self.agent.treasure_pos = Position(row_index, col_index)
                     self.treasure_list.append(treasure)
 
         if not player_found:
@@ -391,7 +315,6 @@ class Game(arcade.Window):
         else:
             print("DEBUG SETUP: No Door (D) on the map for the Agent to target.")
 
-        print("Score de l'agent :", self.agent.score)
         self.physics_engine = arcade.PhysicsEngineSimple(
             self.player_sprite,
             [self.wall_list, self.door_list],
@@ -411,33 +334,42 @@ class Game(arcade.Window):
         self.treasure_list.draw()
         self.player_list.draw()
         self.key_text.draw()
-        self.score_text.draw()
-        self.actions_text.draw()
-        self.exploration_text.draw()
-        self.qtable_text.draw()
-        self.position_text.draw()
         self.draw_grid()
 
-    def on_key_press(self, symbol: int, exploration: int) -> None:
-        if symbol == arcade.key.R:
+
+    def on_key_press(self, key, modifiers):
+        if key == arcade.key.UP or key == arcade.key.Z:
+            self.player_sprite.change_y = 5
+        elif key == arcade.key.DOWN or key == arcade.key.S:
+            self.player_sprite.change_y = -5
+        elif key == arcade.key.LEFT or key == arcade.key.Q:
+            self.player_sprite.change_x = -5
+        elif key == arcade.key.RIGHT or key == arcade.key.D:
+            self.player_sprite.change_x = 5
+        if key == arcade.key.R:
             self.restart_game()
-        if symbol == arcade.key.E:
-            self.agent.exploration += 0.2
+
+    def on_key_release(self, key, modifiers):
+        if key == arcade.key.UP or key == arcade.key.Z:
+            self.player_sprite.change_y = 0
+        elif key == arcade.key.DOWN or key == arcade.key.S:
+            self.player_sprite.change_y = 0
+        elif key == arcade.key.LEFT or key == arcade.key.Q:
+            self.player_sprite.change_x = 0
+        elif key == arcade.key.RIGHT or key == arcade.key.D:
+            self.player_sprite.change_x = 0
+
 
     def restart_game(self) -> None:
         self.current_level_index = 0
-        self.current_map = self.maps[0]
+        self.reset_map()
 
-        new_env = Environment(self.current_map)
-        self.agent.environment = new_env
-        self.agent.reset()
 
         self.action_count = 0
         self.key_count = 0
-        self.score_text.text = f"Score: {self.agent.score}"
-        self.actions_text.text = f"Actions: {self.action_count}"
+
         self.key_text.text = f"Keys: {self.key_count}"
-        self.exploration_text.text = f"Exploration: {self.agent.exploration}"
+
         self.victory = False
 
         self.setup()
@@ -457,48 +389,19 @@ class Game(arcade.Window):
             if 0 <= row < MAP_HEIGHT_TILES:
                 current_monster_positions.append(Position(row, col))
 
-        self.agent.environment.update_monster_positions(current_monster_positions)
 
         self.player_move_timer -= delta_time
 
         if self.player_move_timer <= 0:
             self.player_move_timer = random.uniform(0.1, 0.1)
 
-            direction: Action = self.agent.choose_action_from_knowledge_or_random()
-
-            self.agent.execute_action_and_learn_from_reward(direction)
-
             self.action_count += 1
-
-            self.score_text.text = f"Score: {self.agent.score}"
-            self.actions_text.text = f"Actions: {self.action_count}"
-            self.exploration_text.text = f"Exploration: {self.agent.exploration:.3f}"
-            q_table_size = len(self.agent.q_table.table)
-            self.position_text.text = f"Pos: {self.agent.position}"
-            self.qtable_text.text = f"States: {q_table_size}"
-
-            new_y = self.agent.position.row
-            new_x = self.agent.position.column
-
-            x = new_x * TILE_PIXEL_SIZE + TILE_PIXEL_SIZE / 2
-            y = ((self.map_height_tiles - 1 - new_y) * TILE_PIXEL_SIZE + TILE_PIXEL_SIZE / 2)
-            self.player_sprite.center_x = x
-            self.player_sprite.center_y = y
-
-            if self.agent.level_completed:
-                print(f"NIVEAU {self.current_level_index + 1} TERMINÉ! Transition vers le niveau suivant... avec el "
-                      f"score :", self.agent.score)
-
-                self.agent.level_completed = False
-
-                self.go_to_next_level()
-
-                return
 
             key_hit_list = arcade.check_for_collision_with_list(
                 self.player_sprite,
                 self.key_list,
             )
+
             for key in key_hit_list:
                 key.remove_from_sprite_lists()
                 self.key_count += 1
@@ -506,17 +409,18 @@ class Game(arcade.Window):
                 self.key_text.text = f"Keys: {self.key_count}"
                 print(f"KEY COLLECTED! TOTAL: {self.key_count}")
 
-            door_hit_list = arcade.check_for_collision_with_list(
-                self.player_sprite,
-                self.door_list,
-            )
-            for door in door_hit_list:
-                if self.key_count > 0:
+            for door in self.door_list:
+                distance = arcade.get_distance_between_sprites(self.player_sprite, door)
+                if distance < 47 and self.key_count > 0:
                     self.key_count -= 1
                     self.door_pos = None
                     self.key_text.text = f"Keys: {self.key_count}"
                     door.remove_from_sprite_lists()
                     print("DOOR OPENED!")
+
+                    if self.current_level_index != 2 :
+                        self.level_completed = True
+
                 else:
                     pass
 
@@ -527,13 +431,6 @@ class Game(arcade.Window):
             self.monster_list,
         )
         if len(monster_hit_list) > 0:
-
-            if self.agent.reward != Reward.MONSTER:
-                print("COLLISION PHYSIQUE ! Application de la punition...")
-                # self.agent.score += Reward.MONSTER
-
-            print(f"GAME OVER - Score Final: {self.agent.score}")
-
             self.restart_game()
 
         treasure_hit_list = arcade.check_for_collision_with_list(
@@ -541,9 +438,17 @@ class Game(arcade.Window):
             self.treasure_list,
         )
         if len(treasure_hit_list) > 0:
-            print(f"VICTORY - Score Final: {self.agent.score}")
             self.victory = True
-            self.restart_game()
+            self.reset_map()
+            #self.restart_game()
+
+        if self.level_completed:
+            self.level_completed = False
+            self.go_to_next_level()
+
+    def reset_map(self):
+        self.current_map = self.maps[0]
+        self.env = Environment(self.current_map)
 
     def update_monsters(self, delta_time: float) -> None:
         for monster in self.monster_list:
@@ -590,16 +495,11 @@ class Game(arcade.Window):
         if self.current_level_index >= len(self.maps):
             print(
                 "NO MORE LEVELS, EXITING\n"
-                f"FINAL SCORE: {self.agent.score} - "
                 f"ACTIONS: {self.action_count}"
             )
             arcade.exit()
             return
 
         self.current_map = self.maps[self.current_level_index]
-        temp_score = self.agent.score
-        new_env = Environment(self.current_map)
-        self.agent.environment = new_env
-        self.agent.reset()
-        self.agent.score = temp_score
+        self.env = Environment(self.current_map)
         self.setup()

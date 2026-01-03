@@ -1,6 +1,5 @@
 from game.map.map import MAP_1
 
-
 MAP_HEIGHT_TILES: int = len(MAP_1)
 MAP_WIDTH_TILES = len(MAP_1[0])
 TEXTURE_SIZE: int = 128
