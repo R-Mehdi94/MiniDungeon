@@ -7,7 +7,6 @@ from environment.position.action import Action
 from environment.position.position import Position
 from game.settings import (
     GLOBAL_SCALING,
-    MAP_HEIGHT_TILES,
     SCREEN_HEIGHT,
     SCREEN_TITLE,
     SCREEN_WIDTH,
@@ -380,49 +379,32 @@ class GameManual(arcade.Window):
 
         self.update_monsters(delta_time)
 
-        current_monster_positions = []
+        key_hit_list = arcade.check_for_collision_with_list(
+            self.player_sprite,
+            self.key_list,
+        )
 
-        for monster in self.monster_list:
-            col = int(monster.center_x // TILE_PIXEL_SIZE)
-            row = self.map_height_tiles - 1 - int(monster.center_y // TILE_PIXEL_SIZE)
-            # Avoir la position des monstres en temps réel
-            if 0 <= row < MAP_HEIGHT_TILES:
-                current_monster_positions.append(Position(row, col))
+        for key in key_hit_list:
+            key.remove_from_sprite_lists()
+            self.key_count += 1
+            self.key_pos = None
+            self.key_text.text = f"Keys: {self.key_count}"
+            print(f"KEY COLLECTED! TOTAL: {self.key_count}")
 
-
-        self.player_move_timer -= delta_time
-
-        if self.player_move_timer <= 0:
-            self.player_move_timer = random.uniform(0.1, 0.1)
-
-            self.action_count += 1
-
-            key_hit_list = arcade.check_for_collision_with_list(
-                self.player_sprite,
-                self.key_list,
-            )
-
-            for key in key_hit_list:
-                key.remove_from_sprite_lists()
-                self.key_count += 1
-                self.key_pos = None
+        for door in self.door_list:
+            distance = arcade.get_distance_between_sprites(self.player_sprite, door)
+            if distance < 47 and self.key_count > 0:
+                self.key_count -= 1
+                self.door_pos = None
                 self.key_text.text = f"Keys: {self.key_count}"
-                print(f"KEY COLLECTED! TOTAL: {self.key_count}")
+                door.remove_from_sprite_lists()
+                print("DOOR OPENED!")
 
-            for door in self.door_list:
-                distance = arcade.get_distance_between_sprites(self.player_sprite, door)
-                if distance < 47 and self.key_count > 0:
-                    self.key_count -= 1
-                    self.door_pos = None
-                    self.key_text.text = f"Keys: {self.key_count}"
-                    door.remove_from_sprite_lists()
-                    print("DOOR OPENED!")
+                if self.current_level_index != 2 :
+                    self.level_completed = True
 
-                    if self.current_level_index != 2 :
-                        self.level_completed = True
-
-                else:
-                    pass
+            else:
+                pass
 
         self.physics_engine.update()
 

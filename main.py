@@ -14,6 +14,7 @@ FILE_AGENT = 'agent.qtable'
 
 
 def main() -> None:
+    global agent
     text = input("Choice your mode [1: Manual mode] [2: Agent mode] : ")
 
     maps = [MAP_1, MAP_2, MAP_3]

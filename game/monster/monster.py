@@ -28,6 +28,16 @@ class Monster(arcade.Sprite):
         self.move_timer = 0.1
         self.time_between_moves = 0.1
 
+    def reverse_direction(self) -> None:
+        if self.direction is Action.LEFT:
+            self.direction = Action.RIGHT
+        elif self.direction is Action.RIGHT:
+            self.direction = Action.LEFT
+        elif self.direction is Action.UP:
+            self.direction = Action.DOWN
+        elif self.direction is Action.DOWN:
+            self.direction = Action.UP
+
     @property
     def axis(self) -> MonsterAxis:
         return self.__axis
@@ -44,12 +54,4 @@ class Monster(arcade.Sprite):
     def direction(self, direction: Action) -> None:
         self.__direction = direction
 
-    def reverse_direction(self) -> None:
-        if self.direction is Action.LEFT:
-            self.direction = Action.RIGHT
-        elif self.direction is Action.RIGHT:
-            self.direction = Action.LEFT
-        elif self.direction is Action.UP:
-            self.direction = Action.DOWN
-        elif self.direction is Action.DOWN:
-            self.direction = Action.UP
+
