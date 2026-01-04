@@ -27,7 +27,7 @@ class Agent:
         self.opened_door_position = None
         self.level_completed = False
         self.environment = env
-        self.q_table = QTable(initial_quality=0.0)
+        self.q_table = QTable()
         self.position = self.environment.starting_position
 
         # États du jeu

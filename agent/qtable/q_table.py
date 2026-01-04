@@ -4,11 +4,9 @@ from environment.position.action import Action
 
 class QTable:
     __table: dict[tuple, ActionsQualitiesForState]
-    __initial_quality: float
 
-    def __init__(self, initial_quality: float = 0.0) -> None:
+    def __init__(self) -> None:
         self.table = {}
-        self.initial_quality = initial_quality
 
     @property
     def table(self) -> dict[tuple, ActionsQualitiesForState]:
@@ -18,17 +16,13 @@ class QTable:
     def table(self, value: dict[tuple, ActionsQualitiesForState]) -> None:
         self.__table = value
 
-    @property
-    def initial_quality(self) -> float:
-        return self.__initial_quality
 
-    @initial_quality.setter
-    def initial_quality(self, value: float) -> None:
-        self.__initial_quality = value
+
+
 
     def __or_create_state(self, state_key: tuple) -> ActionsQualitiesForState:
         if state_key not in self.table:
-            self.table[state_key] = ActionsQualitiesForState(self.initial_quality)
+            self.table[state_key] = ActionsQualitiesForState()
         return self.table[state_key]
 
     def get_quality(self, state_key: tuple, action: Action) -> float:
