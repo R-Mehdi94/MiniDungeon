@@ -25,6 +25,9 @@ class Monster(arcade.Sprite):
         else:
             self.direction = choice([Action.UP, Action.DOWN])
 
+        self.move_timer = 0.5
+        self.time_between_moves = 0.5
+
     @property
     def axis(self) -> MonsterAxis:
         return self.__axis

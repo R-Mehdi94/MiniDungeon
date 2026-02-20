@@ -5,14 +5,12 @@ from infrastructure.data.map_4 import MAP_4
 
 
 def train_agent_on_map_4_use_case(
-    agent: Agent,
-    episode_count: int = 1000,
-    max_steps_per_episode: int = 500,
-    new_experience_weight: float = 0.1,
-    future_reward_weight: float = 0.95,
-    initial_exploration_rate: float = 0.5,
-    minimum_exploration_rate: float = 0.05,
-    exploration_decay_factor: float = 0.995,
+        agent: Agent,
+
+        new_experience_weight: float = 0.1,
+        future_reward_weight: float = 0.95,
+        initial_exploration_rate: float = 0.5,
+
 ) -> None:
     '''
     Runs the training of the agent on the training map.
@@ -29,32 +27,21 @@ def train_agent_on_map_4_use_case(
     environment = Environment(MAP_4)
     exploration_rate: float = initial_exploration_rate
 
-    for episode in range(episode_count):
-        agent.environment = environment
-        agent.reset()
+    agent.environment = environment
+    agent.reset()
 
-        total_reward: int = 0
+    total_reward: int = 0
 
-        for _ in range(max_steps_per_episode):
-            action: Action = agent.choose_action_from_knowledge_or_random(exploration_rate)
-            agent.execute_action_and_learn_from_reward(
-                action,
-                new_experience_weight,
-                future_reward_weight,
-            )
-            total_reward += agent.reward
+    action: Action = agent.choose_best_action()
+    agent.execute_action_and_learn_from_reward(
+        action,
+        new_experience_weight,
+        future_reward_weight,
+    )
+    total_reward += agent.reward
 
-            if agent.has_finished_episode:
-                break
+    print(
 
-        if (episode + 1) % 50 == 0:
-            print(
-                f'Episode {episode + 1}/{episode_count} - '
-                f'exploration_rate={exploration_rate:.3f} - '
-                f'total_reward={total_reward}'
-            )
-
-        exploration_rate = max(
-            minimum_exploration_rate,
-            exploration_rate * exploration_decay_factor,
-        )
+        f'exploration_rate={exploration_rate:.3f} - '
+        f'total_reward={total_reward}'
+    )
